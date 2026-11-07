@@ -3,6 +3,7 @@ import {
   SESSION_COOKIE,
   SESSION_MAX_AGE,
   createSessionToken,
+  isAllowedAdminIp,
   safeEqual,
 } from "../../lib/auth";
 import { recordAuthEvent } from "../../lib/loginLog";
@@ -32,6 +33,13 @@ function loadUsers(): { username: string; password: string }[] {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAllowedAdminIp(req.headers, process.env.ADMIN_ALLOWED_IPS)) {
+    return NextResponse.json(
+      { error: "Access denied. This admin login is restricted to registered IP addresses." },
+      { status: 403 }
+    );
+  }
+
   const { AUTH_SECRET } = process.env;
   const users = loadUsers();
 

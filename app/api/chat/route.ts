@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { getSessionUsername, SESSION_COOKIE } from "../../lib/auth";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -7,8 +8,9 @@ async function createWithRetry(params: Anthropic.MessageCreateParamsNonStreaming
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await client.messages.create(params);
-    } catch (err: any) {
-      const isOverloaded = err?.status === 529 || err?.message?.includes("overloaded");
+    } catch (err: unknown) {
+      const apiError = err as { status?: number; message?: string };
+      const isOverloaded = apiError.status === 529 || apiError.message?.includes("overloaded");
       const isLastAttempt = i === maxRetries - 1;
 
       if (isOverloaded && !isLastAttempt) {
@@ -23,6 +25,14 @@ async function createWithRetry(params: Anthropic.MessageCreateParamsNonStreaming
 }
 
 export async function POST(req: NextRequest) {
+  const username = await getSessionUsername(
+    req.cookies.get(SESSION_COOKIE)?.value,
+    process.env.AUTH_SECRET
+  );
+  if (!username) {
+    return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+
   try {
     const { system, messages } = await req.json();
 
@@ -34,11 +44,12 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(response);
-  } catch (err: any) {
-    const isOverloaded = err?.status === 529 || err?.message?.includes("overloaded");
+  } catch (err: unknown) {
+    const apiError = err as { status?: number; message?: string };
+    const isOverloaded = apiError.status === 529 || apiError.message?.includes("overloaded");
 
     return NextResponse.json(
-      { error: { message: isOverloaded ? "Service is busy, please try again in a moment." : err.message ?? "Unknown error" } },
+      { error: { message: isOverloaded ? "Service is busy, please try again in a moment." : apiError.message ?? "Unknown error" } },
       { status: isOverloaded ? 503 : 500 }
     );
   }

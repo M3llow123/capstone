@@ -35,6 +35,7 @@ Add these variables in **Vercel Project Settings > Environment Variables** befor
 
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
+- `ADMIN_ALLOWED_IPS`
 - `AUTH_SECRET`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
@@ -47,6 +48,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 After changing environment variables, redeploy the project. Vercel does not automatically read `.env.local`, because it is intended for local development only.
+
+`ADMIN_ALLOWED_IPS` accepts one public IP address or a comma-separated allowlist. The admin login page and protected admin APIs are blocked for every other IP.
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 

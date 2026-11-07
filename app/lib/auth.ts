@@ -4,6 +4,30 @@
 export const SESSION_COOKIE = "pagasa_session";
 export const SESSION_MAX_AGE = 60 * 60 * 8; // 8 hours, in seconds
 
+export function getClientIp(requestHeaders: Headers): string | null {
+  const forwardedFor = requestHeaders.get("x-vercel-forwarded-for");
+  const candidate = forwardedFor?.split(",")[0]?.trim();
+
+  return candidate ? candidate.replace(/^::ffff:/, "") : null;
+}
+
+export function isAllowedAdminIp(
+  requestHeaders: Headers,
+  allowedIps: string | undefined
+): boolean {
+  if (!allowedIps) return false;
+
+  const clientIp = getClientIp(requestHeaders);
+  if (!clientIp) return false;
+
+  const normalizedClientIp = clientIp.replace(/^::ffff:/, "");
+  return allowedIps
+    .split(",")
+    .map(ip => ip.trim().replace(/^::ffff:/, "").toLowerCase())
+    .filter(Boolean)
+    .includes(normalizedClientIp.toLowerCase());
+}
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
