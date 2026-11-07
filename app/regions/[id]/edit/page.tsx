@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { saveRegionReport } from "../../../lib/reportStore";
 import AuditLogNav from "../../../components/AuditLogNav";
 import { chartFromValidatedTable, type RainfallChartData } from "../../../lib/rainfallChart";
 import { validateRainfallCsv, auditEntryFor, auditZeroFillEntry } from "../../../lib/csvValidation";
@@ -194,6 +193,32 @@ const readAsText = (file: File): Promise<string> =>
     r.readAsText(file);
   });
 
+const MONTH_NAMES = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const MONTH_ABBREVIATIONS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec"];
+const findMonths = (text: string) => {
+  const lower = text.toLowerCase();
+  return MONTH_NAMES.filter((month, index) => {
+    const abbreviation = MONTH_ABBREVIATIONS[index];
+    const monthPattern = new RegExp(`(^|[^a-z])${month}([^a-z]|$)`, "i");
+    const abbreviationPattern = new RegExp(`(^|[^a-z])${abbreviation}([^a-z]|$)`, "i");
+    return monthPattern.test(lower) || abbreviationPattern.test(lower);
+  });
+};
+const monthsMatch = (imageFiles: File[], csvFiles: File[]) => {
+  const imageMonths = new Set(imageFiles.flatMap(file => findMonths(file.name)));
+  const csvMonths = new Set(csvFiles.flatMap(file => findMonths(file.name)));
+  if (!imageMonths.size || !csvMonths.size) return true;
+  return [...imageMonths].some(month => csvMonths.has(month));
+};
+
+const describeMonthMismatch = (imageFiles: File[], csvFiles: File[]) => {
+  const imageMonths = [...new Set(imageFiles.flatMap(file => findMonths(file.name)))];
+  const csvMonths = [...new Set(csvFiles.flatMap(file => findMonths(file.name)))];
+  const format = (months: string[]) => months.map(month => month.charAt(0).toUpperCase() + month.slice(1)).join(", ");
+
+  return `Month mismatch: uploaded image${imageFiles.length > 1 ? "s" : ""} indicate ${format(imageMonths) || "an unidentified month"}, while the CSV${csvFiles.length > 1 ? " files" : " file"} indicate ${format(csvMonths) || "an unidentified month"}.`;
+};
+
 // ── Component ──────────────────────────────────────────────────────────
 export default function RegionsEditPage() {
   const params = useParams();
@@ -274,6 +299,27 @@ export default function RegionsEditPage() {
     setCsvItems(prev => prev.filter((_, j) => j !== i));
   };
 
+  useEffect(() => {
+    const raw = sessionStorage.getItem(`region-upload-draft:${regionId}`);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw) as { images?: { name: string; type: string; data: string }[]; csvFiles?: { name: string; text: string }[]; summary?: string };
+      const imageFilesRestored = (draft.images ?? []).map(item => new File([Uint8Array.from(atob(item.data.split(",").pop() ?? ""), c => c.charCodeAt(0))], item.name, { type: item.type }));
+      if (imageFilesRestored.length) {
+        setImageFiles(imageFilesRestored);
+        setImagePreviews(imageFilesRestored.map(file => URL.createObjectURL(file)));
+      }
+      const csvFiles = (draft.csvFiles ?? []).map(item => new File([item.text], item.name, { type: "text/csv" }));
+      if (csvFiles.length) {
+        const list = Object.assign(csvFiles, { item: (index: number) => csvFiles[index] ?? null }) as unknown as FileList;
+        void handleCsv(list);
+      }
+      if (draft.summary) setSummary(draft.summary);
+    } catch (err) {
+      console.error("Could not restore the region upload draft", err);
+    }
+  }, [regionId, handleCsv]);
+
   const confirmCsv = (id: number, confirmed: boolean) => {
     setCsvItems(prev => prev.map(x => (x.id === id ? { ...x, confirmed } : x)));
     const item = csvItems.find(x => x.id === id);
@@ -338,6 +384,11 @@ export default function RegionsEditPage() {
 
   const handleGenerate = async () => {
     if (!imageFiles.length) { setError("Please upload at least one climate map image."); return; }
+    if (!csvItems.length) { setError("Please upload at least one CSV file."); return; }
+    if (!monthsMatch(imageFiles, csvItems.map(item => item.file))) {
+      setError(describeMonthMismatch(imageFiles, csvItems.map(item => item.file)));
+      return;
+    }
     if (csvBlocked) { setError(csvBlockReason); return; }
     setError(null);
     setGenerating(true);
@@ -413,33 +464,27 @@ export default function RegionsEditPage() {
   };
 
   const handleNext = async () => {
+    if (!imageFiles.length || !csvItems.length) { setError("Upload both an image and a CSV before continuing."); return; }
+    if (!monthsMatch(imageFiles, csvItems.map(item => item.file))) {
+      setError(describeMonthMismatch(imageFiles, csvItems.map(item => item.file)));
+      return;
+    }
     if (csvBlocked) { setError(csvBlockReason); return; } // never save while a CSV is rejected / unconfirmed
     setError(null);
-    setSaved(true);
-
-    // Persist to the shared store so the public report page can surface it.
     try {
-      const imageDataUrls = await Promise.all(imageFiles.map(toBase64File));
-      const chart = buildChart();
-      const { chartSaved } = await saveRegionReport({
-        id: regionId,
-        name: regionName,
+      const draftImages = await Promise.all(imageFiles.map(async file => ({ name: file.name, type: file.type, data: await toBase64File(file) })));
+      const draftCsv = await Promise.all(csvItems.map(async item => ({ name: item.file.name, text: await readAsText(item.file) })));
+      sessionStorage.setItem(`region-upload-draft:${regionId}`, JSON.stringify({
+        images: draftImages,
+        csvFiles: draftCsv,
         summary,
-        images: imageDataUrls,
-        chart,
+        chart: buildChart(),
         month: new Date().toLocaleString("default", { month: "long", year: "numeric" }),
-      });
-      if (chart && !chartSaved) {
-        window.alert(
-          "The graph was read from your CSV, but the server did not store it, so the public report would show no graph.\n\n" +
-          "Deploy the latest app/api/content/route.ts and run 001_add_chart_column.sql in Supabase, then save again."
-        );
-      }
+      }));
     } catch (err) {
-      // Still proceed to review, but tell the admin the save failed instead of failing silently.
-      console.error(err);
-      window.alert(`Saving the report failed: ${err instanceof Error ? err.message : "unknown error"}`);
+      console.error("Could not preserve the region upload draft", err);
     }
+    setSaved(true);
 
     const params = new URLSearchParams({ summary, region: regionName });
     setTimeout(() => router.push(`/regions/${regionId}/review?${params.toString()}`), 300);
@@ -569,14 +614,14 @@ export default function RegionsEditPage() {
               <button
                 className="btn-next"
                 onClick={handleNext}
-                disabled={!summary || csvBlocked}
-                title={csvBlocked ? csvBlockReason : undefined}
+                disabled={!summary || !imageFiles.length || !csvItems.length || csvBlocked}
+                title={csvBlocked ? csvBlockReason : !imageFiles.length || !csvItems.length ? "Upload both an image and a CSV, then generate the summary before continuing." : undefined}
                 style={{
                   background: saved ? "#16a34a" : "#003087",
                   color: "#fff", border: "none", borderRadius: 4,
                   padding: "6px 18px", fontSize: 13, fontWeight: 600,
-                  cursor: summary && !csvBlocked ? "pointer" : "not-allowed",
-                  opacity: summary && !csvBlocked ? 1 : 0.4, transition: "background .15s",
+                  cursor: summary && imageFiles.length && csvItems.length && !csvBlocked ? "pointer" : "not-allowed",
+                  opacity: summary && imageFiles.length && csvItems.length && !csvBlocked ? 1 : 0.4, transition: "background .15s",
                 }}>
                 {saved ? "✓ Saved" : "Next"}
               </button>
@@ -715,22 +760,17 @@ export default function RegionsEditPage() {
           {/* ── Generate / Editor Card ── */}
           <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden" }}>
             {/* Toolbar */}
-            <div style={{ padding: "8px 12px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fafbfc" }}>
-              <div style={{ display: "flex", gap: 5 }}>
-                {["Source", "B", "I", "U", "≡", "≡", "≡"].map((t, i) => (
-                  <button key={i} style={{ background: "none", border: "1px solid #dde3ea", borderRadius: 3, padding: "2px 6px", fontSize: 12, cursor: "pointer", color: "#374151", fontWeight: t === "B" ? 700 : 400, fontStyle: t === "I" ? "italic" : "normal", textDecoration: t === "U" ? "underline" : "none" }}>{t}</button>
-                ))}
-              </div>
+            <div style={{ padding: "8px 12px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "flex-end", background: "#fafbfc" }}>
               <button
                 className="btn-generate"
                 onClick={handleGenerate}
-                disabled={generating || !imageFiles.length || csvBlocked}
-                title={csvBlocked ? csvBlockReason : undefined}
+                disabled={generating || !imageFiles.length || !csvItems.length || csvBlocked}
+                title={csvBlocked ? csvBlockReason : !imageFiles.length || !csvItems.length ? "Upload both an image and a CSV before generating." : undefined}
                 style={{
                   background: "#003087", color: "#fff", border: "none", borderRadius: 4,
                   padding: "6px 16px", fontSize: 13, fontWeight: 600,
-                  cursor: imageFiles.length && !csvBlocked ? "pointer" : "not-allowed",
-                  opacity: imageFiles.length && !csvBlocked ? 1 : 0.4,
+                  cursor: imageFiles.length && csvItems.length && !csvBlocked ? "pointer" : "not-allowed",
+                  opacity: imageFiles.length && csvItems.length && !csvBlocked ? 1 : 0.4,
                   display: "flex", alignItems: "center", gap: 7, transition: "background .15s",
                 }}>
                 {generating
@@ -752,21 +792,16 @@ export default function RegionsEditPage() {
                   <b style={{ color: "#b45309" }}>Data note:</b> {substitutionNotice(substitutedReports.reduce((n, r) => n + r.summary.replaced, 0))} The graph and this summary use the processed copy, and the public report will carry the same disclosure under the graph.
                 </div>
               )}
-              <textarea
-                value={summary}
-                onChange={e => setSummary(e.target.value)}
-                placeholder={generating ? "Generating regional summary…" : "Upload an image (and optionally a CSV), then click Generate to create the regional summary."}
-                rows={10}
+              <div
+                aria-live="polite"
                 style={{
-                  width: "100%", border: "1px solid #dde3ea", borderRadius: 5,
+                  minHeight: 220, border: "1px solid #dde3ea", borderRadius: 5,
                   padding: "10px 12px", fontSize: 13, lineHeight: 1.75, color: "#1f2937",
-                  background: generating ? "#f9fafb" : "#fff",
-                  resize: "vertical", fontFamily: "inherit",
-                  transition: "background .2s",
-                  animation: summary ? "fadeIn .3s ease" : "none",
-                  outline: "none",
+                  background: generating ? "#f9fafb" : "#fff", whiteSpace: "pre-wrap",
                 }}
-              />
+              >
+                {summary || (generating ? "Generating regional summary…" : "Upload the required image and CSV, then click Generate.")}
+              </div>
               <div style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontSize: 11, color: "#aaa" }}>
                   {summary ? `${summary.split(/\s+/).filter(Boolean).length} words` : "No content yet"}

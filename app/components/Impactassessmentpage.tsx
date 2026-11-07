@@ -239,9 +239,6 @@ export default function ImpactAssessmentPage({ username = "User" }: { username?:
                     onChange={e => setRegionSearch(e.target.value)}
                     style={{ border: "1px solid #dee2e6", borderRadius: 3, padding: "5px 10px", fontSize: 13, width: 200, outline: "none" }}
                   />
-                  <button className="btn-add" title="Add region">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14" strokeLinecap="round" /></svg>
-                  </button>
                 </div>
               </div>
 

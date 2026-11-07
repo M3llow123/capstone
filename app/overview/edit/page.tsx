@@ -248,6 +248,29 @@ export default function OverviewEditPage() {
           background: #e5e7eb; border: 1px solid #d1d5db; border-radius: 4px;
           padding: 3px 10px; cursor: pointer; font-size: 13px; color: #374151; margin-right: 8px;
         }
+        .overview-generate-card { grid-column: 1; grid-row: 1; }
+        .overview-preview-card { grid-column: 2; grid-row: 1 / span 2; }
+        .overview-update-card { grid-column: 1; grid-row: 2; width: 100%; }
+        .overview-generation-grid {
+          display: grid;
+          grid-template-columns: minmax(220px, 1fr) minmax(240px, 280px);
+          gap: 18px;
+          align-items: start;
+        }
+        .overview-top-grid {
+          display: grid;
+          grid-template-columns: minmax(560px, 640px) minmax(380px, 560px);
+          gap: 16px;
+          align-items: start;
+          max-width: 1216px;
+        }
+        @media (max-width: 1100px) {
+          .overview-top-grid { grid-template-columns: 1fr; max-width: 760px; }
+          .overview-generate-card, .overview-preview-card, .overview-update-card { grid-column: 1; grid-row: auto; }
+        }
+        @media (max-width: 760px) {
+          .overview-generation-grid { grid-template-columns: 1fr; }
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
         ::-webkit-scrollbar { width:5px; }
         ::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
@@ -340,8 +363,9 @@ export default function OverviewEditPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "#222", margin: "0 0 4px" }}>Impact Assessment</h1>
           <div style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>Overview</div>
 
+          <div className="overview-top-grid" style={{ marginBottom: 16 }}>
           {/* ── Generate Card ── */}
-          <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden", maxWidth: 640, marginBottom: 16 }}>
+          <div className="overview-generate-card" style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden", width: "100%" }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontWeight: 600, fontSize: 14, color: "#222" }}>Generate Overview</span>
               <button
@@ -367,9 +391,9 @@ export default function OverviewEditPage() {
                 Upload the national climate map images, then click Generate. The result fills the Overview Text box below, where you can edit it before saving.
               </p>
 
-              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <div className="overview-generation-grid">
                 {/* Image upload */}
-                <div style={{ flex: 1, minWidth: 200 }}>
+                <div>
                   <label style={{ display: "block", fontWeight: 500, fontSize: 13, marginBottom: 5, color: "#374151" }}>
                     <span style={{ color: "#d32f2f" }}>* </span>Upload Image
                     <span style={{ fontSize: 11, color: "#888", fontWeight: 400, marginLeft: 6 }}>(multiple allowed)</span>
@@ -377,23 +401,26 @@ export default function OverviewEditPage() {
                   <input ref={imageRef} type="file" accept="image/*" multiple
                     onChange={e => handleImage(e.target.files)}
                     style={{ width: "100%", border: "1px solid #dde3ea", borderRadius: 4, padding: "5px 8px", background: "#fff", fontSize: 13 }} />
-                  {imagePreviews.length > 0 && (
-                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                </div>
+
+                {imagePreviews.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 5 }}>Preview</div>
+                    <div style={{ display: "grid", gridTemplateColumns: imagePreviews.length > 1 ? "repeat(2, minmax(0, 1fr))" : "1fr", gap: 8, maxHeight: 220, overflowY: "auto" }}>
                       {imagePreviews.map((src, i) => (
                         <div key={src} style={{ animation: "fadeIn .2s ease" }}>
                           <ZoomableImage src={src} alt={`preview-${i}`}
-                            style={{ width: "100%", maxHeight: 160, objectFit: "contain", background: "#f9fafb", borderRadius: 5, border: "1px solid #dde3ea", display: "block" }} />
-                          <div style={{ marginTop: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: 11, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{imageFiles[i]?.name}</span>
+                            style={{ width: "100%", height: 110, objectFit: "contain", background: "#f9fafb", borderRadius: 5, border: "1px solid #dde3ea", display: "block" }} />
+                          <div style={{ marginTop: 3, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+                            <span style={{ fontSize: 10, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{imageFiles[i]?.name}</span>
                             <button onClick={() => removeImage(i)}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#d32f2f", fontSize: 12, padding: "0 2px", fontWeight: 600 }}>✕ Remove</button>
+                              style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "#d32f2f", fontSize: 11, padding: "0 2px", fontWeight: 600 }}>✕</button>
                           </div>
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
-
+                  </div>
+                )}
               </div>
 
               {genError && (
@@ -407,8 +434,25 @@ export default function OverviewEditPage() {
             </div>
           </div>
 
+          {/* ── Request Form Preview ── */}
+          {formLink.trim() && (
+            <div className="overview-preview-card" style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden", width: "100%", minHeight: 260 }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", fontWeight: 600, fontSize: 14, color: "#222" }}>Preview</div>
+              <div style={{ padding: 16 }}>
+                <div style={{ border: "1px solid #dde3ea", borderRadius: 5, padding: 14, background: "#fafbfc", maxHeight: 520, overflowY: "auto" }}>
+                  <p style={{ fontSize: 13, lineHeight: 1.55, color: "#444", margin: "0 0 12px", whiteSpace: "pre-wrap" }}>
+                    {text || "Overview text will appear here…"}
+                  </p>
+                  <span style={{ display: "inline-block", background: "#003087", color: "#fff", borderRadius: 4, padding: "8px 16px", fontSize: 13, fontWeight: 600 }}>
+                    {formLabel || "Request Form"} ↗
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── Update Card ── */}
-          <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden", maxWidth: 640 }}>
+          <div className="overview-update-card" style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden" }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontWeight: 600, fontSize: 14, color: "#222" }}>Update</span>
               <button
@@ -480,25 +524,6 @@ export default function OverviewEditPage() {
                 </div>
               )}
 
-              {formLink.trim() && (
-                <div style={{ marginTop: 14, animation: "fadeIn .2s ease" }}>
-                  <div style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>Preview</div>
-                  <div style={{ border: "1px solid #dde3ea", borderRadius: 5, padding: 14, background: "#fafbfc" }}>
-                    <p style={{ fontSize: 13, color: "#444", margin: "0 0 12px", whiteSpace: "pre-wrap" }}>
-                      {text || "Overview text will appear here…"}
-                    </p>
-                    <span
-                      style={{
-                        display: "inline-block", background: "#003087", color: "#fff",
-                        borderRadius: 4, padding: "8px 16px", fontSize: 13, fontWeight: 600,
-                      }}
-                    >
-                      {formLabel || "Request Form"} ↗
-                    </span>
-                  </div>
-                </div>
-              )}
-
               {error && (
                 <div style={{ background: "rgba(211,47,47,.07)", border: "1px solid rgba(211,47,47,.2)", borderRadius: 5, padding: "9px 12px", fontSize: 13, color: "#d32f2f", marginTop: 14 }}>
                   ⚠ {error}
@@ -511,14 +536,6 @@ export default function OverviewEditPage() {
               )}
             </div>
           </div>
-
-          <div style={{ marginTop: 14 }}>
-            <button
-              onClick={() => router.push("/")}
-              style={{ background: "#fff", border: "1px solid #dde3ea", color: "#374151", borderRadius: 4, padding: "6px 14px", fontSize: 13, cursor: "pointer" }}
-            >
-              ← Back to Impact Assessment
-            </button>
           </div>
         </div>
       </div>

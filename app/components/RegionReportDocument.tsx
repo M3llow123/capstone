@@ -94,8 +94,10 @@ function LegacyRegionReport({
         .map-sublabel { font-size: 8px; text-align: center; color: #333; margin: 0 0 4px; font-style: italic; }
         @media print {
           .no-print { display: none !important; }
-          .a4-page { box-shadow: none !important; border: none !important; width: 794px !important; margin: 0 !important; border-radius: 0 !important; }
-          @page { size: A4 portrait; margin: 10mm 12mm; }
+          .a4-page { box-shadow: none !important; border: none !important; width: 180mm !important; max-width: 180mm !important; min-width: 0 !important; margin: 0 auto !important; border-radius: 0 !important; overflow: hidden !important; break-inside: avoid; }
+          @page { size: Letter portrait; margin: 8mm 10mm; }
+          html, body { overflow: visible !important; margin: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          img, svg, canvas { max-width: 100% !important; }
         }
       `}</style>
 
@@ -270,8 +272,10 @@ export default function RegionReportDocument({
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          .a4-page { box-shadow: none !important; border: none !important; width: 794px !important; margin: 0 !important; border-radius: 0 !important; }
-          @page { size: A4 portrait; margin: 10mm 12mm; }
+          .a4-page { box-shadow: none !important; border: none !important; width: 180mm !important; max-width: 180mm !important; min-width: 0 !important; margin: 0 auto !important; border-radius: 0 !important; overflow: hidden !important; break-inside: avoid; }
+          @page { size: Letter portrait; margin: 8mm 10mm; }
+          html, body { overflow: visible !important; margin: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          img, svg, canvas { max-width: 100% !important; }
         }
       `}</style>
       <div

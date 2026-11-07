@@ -58,15 +58,21 @@ export default function RegionsPrintPage() {
 
         @media print {
           .no-print { display: none !important; }
-          body { margin: 0; background: #fff; }
+          body { margin: 0; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .a4-page {
             box-shadow: none !important;
             border: none !important;
-            width: 794px !important;
-            margin: 0 !important;
+            width: 180mm !important;
+            max-width: 180mm !important;
+            min-width: 0 !important;
+            margin: 0 auto !important;
             border-radius: 0 !important;
+            overflow: hidden !important;
+            break-inside: avoid;
           }
-          @page { size: A4 portrait; margin: 10mm 12mm; }
+          html, body { overflow: visible !important; }
+          img, svg, canvas { max-width: 100% !important; }
+          @page { size: Letter portrait; margin: 8mm 10mm; }
         }
       `}</style>
 
@@ -135,6 +141,10 @@ export default function RegionsPrintPage() {
                 <span style={{ fontSize: 12, color: "#aaa" }}>Review the A4 document below, then print or save as PDF.</span>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
+                <button className="back-btn" onClick={() => router.push("/uploader")}
+                  style={{ background: "#fff", border: "1px solid #dde3ea", color: "#374151", borderRadius: 4, padding: "6px 14px", fontSize: 13, cursor: "pointer" }}>
+                  ← Back to Region
+                </button>
                 <button className="back-btn" onClick={() => router.back()}
                   style={{ background: "#fff", border: "1px solid #dde3ea", color: "#374151", borderRadius: 4, padding: "6px 14px", fontSize: 13, cursor: "pointer", transition: "background .15s" }}>
                   ← Back
@@ -155,13 +165,6 @@ export default function RegionsPrintPage() {
             <RegionReportDocument regionName={regionName} summary={summary} month={month} mapImage={saved?.images?.[0] ?? null} chart={saved?.chart ?? null} />
           </div>
 
-                    {/* Bottom back button */}
-          <div className="no-print" style={{ marginTop: 16 }}>
-            <button className="back-btn" onClick={() => router.back()}
-              style={{ background: "#fff", border: "1px solid #dde3ea", color: "#374151", borderRadius: 4, padding: "6px 14px", fontSize: 13, cursor: "pointer", transition: "background .15s" }}>
-              ← Back to Review
-            </button>
-          </div>
         </div>
       </div>
     </div>

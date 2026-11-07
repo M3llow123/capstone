@@ -37,7 +37,12 @@ export async function POST(req: NextRequest) {
 
   if (users.length === 0 || !AUTH_SECRET) {
     return NextResponse.json(
-      { error: "Login is not configured. Set USERS (or ADMIN_USERNAME and ADMIN_PASSWORD) and AUTH_SECRET in .env.local." },
+      {
+        error:
+          process.env.NODE_ENV === "production"
+            ? "Login is not configured on this deployment. Add ADMIN_USERNAME, ADMIN_PASSWORD, and AUTH_SECRET under Vercel Project Settings > Environment Variables, then redeploy."
+            : "Login is not configured locally. Set ADMIN_USERNAME, ADMIN_PASSWORD, and AUTH_SECRET in .env.local.",
+      },
       { status: 500 }
     );
   }

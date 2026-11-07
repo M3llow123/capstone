@@ -55,7 +55,11 @@ export default function EditSummaryPage() {
 
   const back = () => {
     if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
-    router.push("/uploader");
+    router.push(`/regions/${id}/edit`);
+  };
+
+  const publish = async () => {
+    await save();
   };
 
   const save = async () => {
@@ -94,8 +98,16 @@ export default function EditSummaryPage() {
       </div>
 
       <div style={{ maxWidth: 1500, margin: "0 auto", padding: "26px 28px 40px" }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Edit Summary</h1>
-        <div style={{ fontSize: 14, color: "#64748b", margin: "4px 0 20px" }}>{report ? report.name : "Region"}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 20 }}>
+          <div>
+            <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>Edit Summary</h1>
+            <div style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>{report ? report.name : "Region"}</div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={back} disabled={saving} style={{ ...btn("#fff", "#475569"), border: "1px solid #cbd5e1" }}>← Back to Upload</button>
+            <button onClick={publish} disabled={saving || !dirty} style={{ ...btn("#003087"), opacity: saving || !dirty ? 0.55 : 1 }}>Save &amp; Publish</button>
+          </div>
+        </div>
 
         {!report ? (
           <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 6, padding: 28, fontSize: 14 }}>
@@ -128,14 +140,10 @@ export default function EditSummaryPage() {
 
               {error && <div style={{ marginTop: 12, color: "#b91c1c", fontSize: 13 }}>{error}</div>}
 
-              <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-                <button onClick={save} disabled={saving || !dirty} style={{ ...btn("#4caf50"), opacity: saving || !dirty ? 0.55 : 1, cursor: saving || !dirty ? "not-allowed" : "pointer" }}>
-                  {saving ? "Saving…" : "Save changes"}
-                </button>
+              <div style={{ marginTop: 16 }}>
                 <button onClick={() => setText(report.summary)} disabled={!dirty || saving} style={{ ...btn("#fff", "#475569"), border: "1px solid #cbd5e1", opacity: !dirty ? 0.55 : 1 }}>
                   Undo all changes
                 </button>
-                <button onClick={back} disabled={saving} style={{ ...btn("#fff", "#475569"), border: "1px solid #cbd5e1" }}>Cancel</button>
               </div>
             </div>
 

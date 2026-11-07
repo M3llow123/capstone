@@ -242,15 +242,6 @@ export default function CornCropStageEditPage() {
               )}
             </div>
           </div>
-
-          <div style={{ marginTop: 14 }}>
-            <button
-              onClick={() => router.push("/")}
-              style={{ background: "#fff", border: "1px solid #dde3ea", color: "#374151", borderRadius: 4, padding: "6px 14px", fontSize: 13, cursor: "pointer" }}
-            >
-              ← Back to Impact Assessment
-            </button>
-          </div>
         </div>
       </div>
     </div>

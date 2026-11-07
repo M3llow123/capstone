@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import AuditLogNav from "../../../components/AuditLogNav";
 import { getRegionReport, refreshContent, saveRegionReport } from "../../../lib/reportStore";
+import type { RainfallChartData } from "../../../lib/rainfallChart";
 
 export default function RegionsReviewPage() {
   const router = useRouter();
@@ -19,16 +20,12 @@ export default function RegionsReviewPage() {
   const [saved, setSaved] = useState(false);
   const [impactOpen, setImpactOpen] = useState(true);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
-  const [wordCount, setWordCount] = useState(0);
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
   const editorRef = useRef<HTMLDivElement>(null);
 
   const impactChildren = ["Corn Crop Stage and Water Sufficiency", "Rice Crop Stage and Water Sufficiency", "Monthly Rainfall", "Tropical Cyclone", "Crop Condition and Drought Indicator", "Regions", "Cover Page", "About this Report", "Preface", "Overview"];
 
-  useEffect(() => {
-    const words = summary.trim().split(/\s+/).filter(Boolean).length;
-    setWordCount(words);
-  }, [summary]);
+  const wordCount = summary.trim().split(/\s+/).filter(Boolean).length;
 
   useEffect(() => {
     if (editorRef.current && initialSummary) {
@@ -72,17 +69,35 @@ export default function RegionsReviewPage() {
         await refreshContent();
         existing = getRegionReport(id);
       }
-      if (!existing) {
-        throw new Error("No saved report was found for this region. Go back to Upload, generate the summary and click Next first.");
+      const reportName = existing?.name ?? regionName;
+      const fallbackImages = existing?.images ?? [];
+      const fallbackChart = existing?.chart ?? null;
+      const fallbackMonth = existing?.month ?? month;
+
+      let draftImages = fallbackImages;
+      let draftChart = fallbackChart;
+      let draftMonth = fallbackMonth;
+      const rawDraft = sessionStorage.getItem(`region-upload-draft:${id}`);
+      if (rawDraft) {
+        const draft = JSON.parse(rawDraft) as {
+          images?: Array<{ data: string }>;
+          chart?: RainfallChartData | null;
+          month?: string;
+        };
+        if (draft.images?.length) {
+          draftImages = draft.images.map(image => image.data);
+        }
+        draftChart = draft.chart ?? null;
+        if (draft.month) draftMonth = draft.month;
       }
+
       await saveRegionReport({
-        id: existing.id,
-        name: existing.name,
+        id,
+        name: reportName,
         summary: currentSummary,
-        images: existing.images,            // existing image URLs are kept as they are
-        month: existing.month,
-        // only sent when we have it, otherwise the server keeps the stored graph data
-        ...(existing.chart ? { chart: existing.chart } : {}),
+        images: draftImages,
+        month: draftMonth,
+        chart: draftChart,
       });
     } catch (e) {
       setSaved(false);
@@ -338,10 +353,10 @@ export default function RegionsReviewPage() {
           <div style={{ marginTop: 14 }}>
             <button
               className="btn-back"
-              onClick={() => router.back()}
+              onClick={() => router.push(`/regions/${id}/summary`)}
               style={{ background: "#fff", border: "1px solid #dde3ea", color: "#374151", borderRadius: 4, padding: "6px 14px", fontSize: 13, cursor: "pointer", transition: "background .15s" }}
             >
-              ← Back to Upload
+              ← Back to Edit Summary
             </button>
           </div>
         </div>

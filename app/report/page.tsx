@@ -32,7 +32,6 @@ import {
 
 import RegionReportPanel from "../components/RegionReportViewer";
 import ZoomableImage from "../components/ZoomableImage";
-import UserMenu from "@/app/components/UserMenu";
 
 const TABS = [
   "Cover Page",
@@ -154,6 +153,7 @@ function ReportPageInner() {
 
   const [selectedCategoryImage, setSelectedCategoryImage] =
     useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [now, setNow] = useState<Date | null>(null);
 
@@ -163,8 +163,10 @@ function ReportPageInner() {
 
   useEffect(() => {
     if (!selectedRegionId) {
-      setSelectedRegionReport(null);
-      return;
+      const timeoutId = window.setTimeout(() => {
+        setSelectedRegionReport(null);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
 
     const refresh = () => {
@@ -188,8 +190,10 @@ function ReportPageInner() {
     const store = selectedCategory ? CATEGORY_STORE[selectedCategory] : null;
 
     if (!store) {
-      setSelectedCategoryImage(null);
-      return;
+      const timeoutId = window.setTimeout(() => {
+        setSelectedCategoryImage(null);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
 
     const refresh = () => {
@@ -248,8 +252,9 @@ function ReportPageInner() {
 
   return (
     <div
+      className="report-page"
       style={{
-        height: "100vh",
+        height: "100dvh",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -264,6 +269,19 @@ function ReportPageInner() {
           box-sizing: border-box;
         }
 
+        .govph-topbar,
+        .pagasa-header,
+        .report-body,
+        .report-main,
+        .report-tabs {
+          width: 100%;
+        }
+
+        .mobile-menu-button,
+        .mobile-menu-overlay {
+          display: none;
+        }
+
         .region-item {
           background: #c3c8da;
           color: #1c2b3a;
@@ -273,6 +291,203 @@ function ReportPageInner() {
           background: #1c2b3a;
           color: #ffffff;
         }
+
+        @media (max-width: 1100px) {
+          .govph-extra,
+          .govph-search,
+          .pagasa-nav,
+          .pagasa-clock {
+            display: none !important;
+          }
+
+          .govph-topbar {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+          }
+
+          .pagasa-header {
+            padding: 8px 16px !important;
+          }
+
+          .icon-rail {
+            width: 46px !important;
+          }
+
+          .report-secondary {
+            width: 170px !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+          }
+
+          .report-tabs {
+            overflow-x: auto;
+          }
+        }
+
+        @media (max-width: 760px) {
+          html,
+          body {
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+          }
+
+          .report-page {
+            width: 100vw !important;
+            height: 100dvh !important;
+          }
+
+          .govph-topbar {
+            min-height: 38px;
+            padding: 5px 12px !important;
+          }
+
+          .govph-topbar > span:not(:first-of-type),
+          .pagasa-clock {
+            display: none !important;
+          }
+
+          .pagasa-header {
+            min-height: 68px;
+            padding: 7px 12px !important;
+            gap: 10px !important;
+          }
+
+          .pagasa-header-logo {
+            width: 48px !important;
+            height: 48px !important;
+          }
+
+          .pagasa-header-copy {
+            min-width: 0;
+            flex: 1;
+          }
+
+          .pagasa-header-department {
+            font-size: 9px !important;
+          }
+
+          .pagasa-header-name {
+            font-size: 12px !important;
+            line-height: 1.15 !important;
+          }
+
+          .pagasa-header-name br {
+            display: none;
+          }
+
+          .mobile-menu-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            border: 1px solid #d8dde5;
+            border-radius: 4px;
+            background: #fff;
+            color: #282a35;
+            cursor: pointer;
+          }
+
+          .icon-rail,
+          .report-secondary {
+            display: none !important;
+          }
+
+          .report-secondary.mobile-open {
+            display: flex !important;
+            position: fixed;
+            z-index: 60;
+            top: 106px;
+            bottom: 0;
+            left: 0;
+            width: min(280px, 82vw) !important;
+            box-shadow: 8px 0 24px rgba(0, 0, 0, .24);
+          }
+
+          .mobile-menu-overlay.open {
+            display: block;
+            position: fixed;
+            z-index: 55;
+            top: 106px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(0, 0, 0, .35);
+          }
+
+          .report-main {
+            overflow-x: hidden;
+          }
+
+          .report-main img,
+          .report-main canvas,
+          .report-main table,
+          .report-main video {
+            max-width: 100%;
+          }
+
+          .report-main,
+          .report-body {
+            min-width: 0;
+          }
+
+          .report-tabs {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+          }
+
+          .report-tab-content {
+            padding: 12px !important;
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+
+          .report-cover {
+            min-height: 520px !important;
+          }
+
+          .report-cover-header,
+          .report-cover-title-row {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+          }
+
+          .report-cover-title-row {
+            gap: 12px !important;
+          }
+
+          .report-cover-title-row > div:first-child {
+            flex-basis: 100% !important;
+          }
+
+          .report-cover-title-row {
+            flex-direction: column !important;
+          }
+
+          .report-cover-title {
+            font-size: clamp(25px, 8vw, 34px) !important;
+          }
+
+          .report-cover-subtitle {
+            font-size: clamp(16px, 5vw, 22px) !important;
+          }
+
+          .report-section-card {
+            padding: 16px !important;
+          }
+
+          .report-floating-panel {
+            position: fixed !important;
+            top: 114px !important;
+            right: 12px !important;
+            left: 12px !important;
+            width: auto !important;
+            max-width: none !important;
+            max-height: calc(100vh - 126px);
+          }
+        }
       `}</style>
 
       {/* =====================================
@@ -280,6 +495,7 @@ function ReportPageInner() {
       ====================================== */}
 
       <div
+        className="govph-topbar"
         style={{
           background: "#282a35",
           color: "#fff",
@@ -301,6 +517,7 @@ function ReportPageInner() {
         />
 
         <span
+          className="govph-extra"
           style={{
             fontWeight: 700,
             letterSpacing: ".02em",
@@ -310,6 +527,7 @@ function ReportPageInner() {
         </span>
 
         <span
+          className="govph-extra"
           style={{
             opacity: 0.85,
             cursor: "pointer",
@@ -337,6 +555,7 @@ function ReportPageInner() {
         </span>
 
         <div
+          className="govph-extra"
           style={{
             marginLeft: "auto",
             display: "flex",
@@ -358,6 +577,7 @@ function ReportPageInner() {
         </div>
 
         <input
+          className="govph-search"
           placeholder="Search PAGASA Website"
           style={{
             background: "#fff",
@@ -377,6 +597,7 @@ function ReportPageInner() {
       ====================================== */}
 
       <div
+        className="pagasa-header"
         style={{
           background: "#fff",
           borderBottom: "1px solid #dde3ea",
@@ -391,22 +612,25 @@ function ReportPageInner() {
         <img
           src="/pagasa-logo.png"
           alt="PAGASA logo"
+          className="pagasa-header-logo"
           width={56}
           height={56}
           style={{ display: "block", flexShrink: 0 }}
         />
 
-        <div>
+        <div className="pagasa-header-copy">
           <div
             style={{
               fontSize: 11,
               color: "#555",
             }}
+            className="pagasa-header-department"
           >
             Department of Science and Technology
           </div>
 
           <div
+            className="pagasa-header-name"
             style={{
               fontSize: 15,
               fontWeight: 700,
@@ -421,6 +645,7 @@ function ReportPageInner() {
         </div>
 
         <nav
+          className="pagasa-nav"
           style={{
             marginLeft: "auto",
             display: "flex",
@@ -463,6 +688,16 @@ function ReportPageInner() {
 
           {dateStr}
         </div>
+
+        <button
+          type="button"
+          className="mobile-menu-button"
+          aria-label={mobileMenuOpen ? "Close report menu" : "Open report menu"}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? "✕" : "☰"}
+        </button>
       </div>
 
       {/* =====================================
@@ -470,6 +705,7 @@ function ReportPageInner() {
       ====================================== */}
 
       <div
+        className="report-body"
         style={{
           display: "flex",
           flex: 1,
@@ -481,6 +717,7 @@ function ReportPageInner() {
         ==================================== */}
 
         <div
+          className="icon-rail"
           style={{
             width: 52,
             background: "#282a35",
@@ -512,6 +749,7 @@ function ReportPageInner() {
         ==================================== */}
 
         <div
+          className={`report-secondary${mobileMenuOpen ? " mobile-open" : ""}`}
           style={{
             width: 190,
             background: "#3b3f52",
@@ -539,6 +777,7 @@ function ReportPageInner() {
                     setSelectedCategory(
                       (previous) => (previous === label ? null : label)
                     );
+                    setMobileMenuOpen(false);
 
                     setSelectedRegionId(null);
                     setRegionsPanelOpen(false);
@@ -571,6 +810,7 @@ function ReportPageInner() {
               setRegionsPanelOpen(
                 (previous) => !previous
               );
+              setMobileMenuOpen(false);
 
               setRegionsListOpen(false);
               setSelectedCategory(null);
@@ -597,11 +837,19 @@ function ReportPageInner() {
           </button>
         </div>
 
+        <button
+          type="button"
+          className={`mobile-menu-overlay${mobileMenuOpen ? " open" : ""}`}
+          aria-label="Close report menu"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+
         {/* ===================================
             MAIN CONTENT (only this scrolls)
         ==================================== */}
 
         <div
+          className="report-main"
           style={{
             flex: 1,
             padding: 0,
@@ -618,6 +866,7 @@ function ReportPageInner() {
 
           {regionsPanelOpen && (
             <div
+              className="report-floating-panel"
               style={{
                 ...FLOATING_PANEL_POSITION,
                 width: 210,
@@ -732,12 +981,12 @@ function ReportPageInner() {
                     alignItems: "center",
                     justifyContent:
                       "space-between",
+                    position: "relative",
                   }}
                 >
                   <button
                     onClick={() => {
-                      setRegionsPanelOpen(true);
-                      setRegionsListOpen(true);
+                      setRegionsListOpen((open) => !open);
                     }}
                     style={{
                       background: "none",
@@ -766,8 +1015,52 @@ function ReportPageInner() {
                         (region) => region.id === selectedRegionId
                       )?.name ?? "Regions"}
                     </span>
-                    <ChevronDown size={14} style={{ flexShrink: 0 }} />
+                    {regionsListOpen ? (
+                      <ChevronUp size={14} style={{ flexShrink: 0 }} />
+                    ) : (
+                      <ChevronDown size={14} style={{ flexShrink: 0 }} />
+                    )}
                   </button>
+
+                  {regionsListOpen && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        width: 210,
+                        background: "#fff",
+                        border: "1px solid #ccd4df",
+                        boxShadow: "0 6px 18px rgba(0,0,0,.18)",
+                        maxHeight: 380,
+                        overflowY: "auto",
+                        zIndex: 30,
+                      }}
+                    >
+                      {REGIONS_LIST.map((region) => (
+                        <button
+                          key={region.id}
+                          className="region-item"
+                          onClick={() => {
+                            setSelectedRegionId(region.id);
+                            setRegionsListOpen(false);
+                          }}
+                          style={{
+                            width: "100%",
+                            border: "none",
+                            borderBottom: "1px solid rgba(28,43,58,.12)",
+                            padding: "9px 14px",
+                            textAlign: "left",
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            fontSize: 12,
+                          }}
+                        >
+                          {region.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   <button
                     onClick={() =>
@@ -837,6 +1130,7 @@ function ReportPageInner() {
 
           {selectedCategory && (
             <div
+              className="report-floating-panel"
               style={{
                 ...FLOATING_PANEL_POSITION,
                 width: 452,
@@ -986,6 +1280,7 @@ function ReportPageInner() {
           ================================== */}
 
           <div
+            className="report-tab-content"
             style={{
               padding: "24px",
               maxWidth: reservedWidth
@@ -1032,6 +1327,7 @@ function PlaceholderSection({
 }) {
   return (
     <div
+      className="report-cover"
       style={{
         background: "#fff",
         border: "1px solid #dde3ea",
@@ -1086,6 +1382,7 @@ function AboutThisReportSection() {
 
   return (
     <div
+      className="report-cover-header"
       style={{
         background: "#fff",
         border: "1px solid #dde3ea",
@@ -1106,6 +1403,7 @@ function AboutThisReportSection() {
 
       {aboutImage && (
         <div
+          className="report-cover-title-row"
           style={{
             width: "100%",
             maxWidth: 700,
@@ -1171,6 +1469,7 @@ function PrefaceSection() {
 
   return (
     <div
+      className="report-cover-title"
       style={{
         background: "#fff",
         border: "1px solid #dde3ea",
@@ -1271,6 +1570,7 @@ function CoverPage({
   if (coverImage) {
     return (
       <div
+        className="report-cover-subtitle"
         style={{
           width: "100%",
           maxWidth: 760,

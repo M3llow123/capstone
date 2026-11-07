@@ -254,7 +254,7 @@ export default function PrefaceEditPage() {
 
             <div style={{ padding: "18px 16px" }}>
               <p style={{ color: "#888", fontSize: 12, margin: "0 0 14px" }}>
-                Build the Preface by stacking text and image blocks in any order — text, text, image, text, image, and so on. Use the arrows to reorder.
+                Build the Preface by stacking text and image blocks in any order. Use the arrows to reorder.
               </p>
 
               <label style={{ display: "block", fontWeight: 500, fontSize: 13, marginBottom: 10, color: "#374151" }}>
@@ -349,15 +349,6 @@ export default function PrefaceEditPage() {
                 </div>
               )}
             </div>
-          </div>
-
-          <div style={{ marginTop: 14 }}>
-            <button
-              onClick={() => router.push("/")}
-              style={{ background: "#fff", border: "1px solid #dde3ea", color: "#374151", borderRadius: 4, padding: "6px 14px", fontSize: 13, cursor: "pointer" }}
-            >
-              ← Back to Impact Assessment
-            </button>
           </div>
         </div>
       </div>

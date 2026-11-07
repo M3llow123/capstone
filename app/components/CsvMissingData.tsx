@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { MissingCell } from "../lib/csvValidation";
 
 // Building blocks of the two-stage missing-data workflow. Same inline-style /
@@ -23,36 +23,60 @@ const VISIBLE = 8;
 /** Exact rows and columns that contain missing values. Row = line number in the CSV (row 1 is the header). */
 function MissingList({ cells, tone }: { cells: MissingCell[]; tone: typeof RED }) {
   const [all, setAll] = useState(false);
+  const [open, setOpen] = useState(true);
+  const listId = useId();
   const shown = all ? cells : cells.slice(0, VISIBLE);
   const th: React.CSSProperties = { textAlign: "left", padding: "3px 8px", fontWeight: 700, color: tone.title, borderBottom: `1px solid ${tone.border}`, whiteSpace: "nowrap" };
   const td: React.CSSProperties = { padding: "3px 8px", borderBottom: `1px solid ${tone.border}`, color: "#374151" };
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ overflowX: "auto", background: "#fff", border: `1px solid ${tone.border}`, borderRadius: 4 }}>
-        <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 11.5 }}>
-          <thead>
-            <tr><th style={th}>CSV row</th><th style={th}>Column</th><th style={th}>Date</th></tr>
-          </thead>
-          <tbody>
-            {shown.map((c, i) => (
-              <tr key={`${c.row}-${c.colIndex}-${i}`}>
-                <td style={td}>Row {c.row}</td>
-                <td style={td}>{c.column}</td>
-                <td style={td}>{c.date ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "#fff", border: `1px solid ${tone.border}`, borderRadius: 4,
+          padding: "7px 8px", color: tone.title, fontSize: 12, fontWeight: 700,
+          cursor: "pointer", fontFamily: "inherit",
+        }}
+      >
+        <span>Missing value details ({cells.length})</span>
+        <span aria-hidden style={{ fontSize: 14, transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>⌄</span>
+      </button>
+      <div
+        id={listId}
+        hidden={!open}
+        style={{ marginTop: 4 }}
+      >
+        <div style={{ overflowX: "auto", background: "#fff", border: `1px solid ${tone.border}`, borderRadius: 4 }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 11.5 }}>
+            <thead>
+              <tr><th style={th}>CSV row</th><th style={th}>Column</th><th style={th}>Date</th></tr>
+            </thead>
+            <tbody>
+              {shown.map((c, i) => (
+                <tr key={`${c.row}-${c.colIndex}-${i}`}>
+                  <td style={td}>Row {c.row}</td>
+                  <td style={td}>{c.column}</td>
+                  <td style={td}>{c.date ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ marginTop: 3, fontSize: 11, color: "#6b7280" }}>Row numbers match the CSV file (row 1 is the header).</div>
+        {cells.length > VISIBLE && (
+          <button
+            type="button"
+            onClick={() => setAll((v) => !v)}
+            style={{ background: "none", border: "none", padding: "3px 0 0", color: tone.title, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            {all ? "Show fewer" : `Show all ${cells.length} missing values`}
+          </button>
+        )}
       </div>
-      <div style={{ marginTop: 3, fontSize: 11, color: "#6b7280" }}>Row numbers match the CSV file (row 1 is the header).</div>
-      {cells.length > VISIBLE && (
-        <button
-          onClick={() => setAll((v) => !v)}
-          style={{ background: "none", border: "none", padding: "3px 0 0", color: tone.title, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-        >
-          {all ? "Show fewer" : `Show all ${cells.length} missing values`}
-        </button>
-      )}
     </div>
   );
 }
