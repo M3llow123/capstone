@@ -15,6 +15,11 @@ export function isAllowedAdminIp(
   requestHeaders: Headers,
   allowedIps: string | undefined
 ): boolean {
+  // Local development only (`npm run dev`): localhost has no x-vercel-forwarded-for
+  // header, so the IP check can't work there. Vercel always runs with
+  // NODE_ENV === "production", so this never applies to the live site.
+  if (process.env.NODE_ENV !== "production") return true;
+
   if (!allowedIps) return false;
 
   const clientIp = getClientIp(requestHeaders);
