@@ -402,8 +402,15 @@ function ReportPageInner() {
             top: 106px;
             bottom: 0;
             left: 0;
-            width: min(280px, 82vw) !important;
+            width: min(320px, 88vw) !important;
+            padding: 24px 20px 90px !important;
             box-shadow: 8px 0 24px rgba(0, 0, 0, .24);
+          }
+
+          .report-secondary.mobile-open button {
+            min-height: 36px;
+            font-size: 15px !important;
+            line-height: 1.35 !important;
           }
 
           .mobile-menu-overlay.open {
@@ -485,7 +492,12 @@ function ReportPageInner() {
             left: 12px !important;
             width: auto !important;
             max-width: none !important;
-            max-height: calc(100vh - 126px);
+            max-height: calc(100dvh - 126px);
+            overflow-y: auto !important;
+          }
+
+          .report-floating-panel > div {
+            max-height: calc(100dvh - 180px) !important;
           }
         }
       `}</style>
@@ -669,6 +681,7 @@ function ReportPageInner() {
         </nav>
 
         <div
+          className="pagasa-clock"
           style={{
             border: "1px solid #d32f2f",
             borderRadius: 3,
@@ -956,7 +969,8 @@ function ReportPageInner() {
           {selectedRegionId &&
             !regionsPanelOpen && (
               <div
-                style={{
+              className="report-floating-panel"
+              style={{
                   ...FLOATING_PANEL_POSITION,
                   width: 620,
                   ...FLOATING_PANEL_FIT,
