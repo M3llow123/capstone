@@ -109,7 +109,7 @@ function emitAll() {
 
 // ── Loading from the server ───────────────────────────────────────────
 /** Reload everything from the database (only notifies listeners if something changed). */
-export async function refreshContent(): Promise<void> {
+export async function refreshContent(attempt = 1): Promise<void> {
   if (typeof window === "undefined") return;
   try {
     const res = await fetch("/api/content", { cache: "no-store" });
@@ -128,6 +128,11 @@ export async function refreshContent(): Promise<void> {
     }
   } catch (err) {
     console.error("Could not load report content:", err);
+    // A weak mobile connection or a brief server hiccup should not leave the page empty:
+    // try again a couple of times before giving up.
+    if (attempt < 3) {
+      window.setTimeout(() => { void refreshContent(attempt + 1); }, attempt * 2000);
+    }
   } finally {
     loadState = "done";
   }
@@ -141,6 +146,13 @@ function ensureLoaded() {
     focusHooked = true;
     // Pick up changes made on another device when the tab is used again.
     window.addEventListener("focus", () => {
+      void refreshContent();
+    });
+    // Phones rarely fire "focus" when you switch back to the browser; these cover that case.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") void refreshContent();
+    });
+    window.addEventListener("online", () => {
       void refreshContent();
     });
   }
