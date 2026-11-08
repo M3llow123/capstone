@@ -52,6 +52,18 @@ const NAV_ITEMS = [
   "REGIONAL FORECAST",
 ];
 
+// Mobile menu (same list and look as the PAGASA website's mobile "GOVPH" menu).
+const GOV_MOBILE_MENU: { label: string; icon?: string; caret?: boolean }[] = [
+  { label: "Home" },
+  { label: "Weather", icon: "02-weather", caret: true },
+  { label: "Flood", icon: "03-flood", caret: true },
+  { label: "Tropical Cyclone", icon: "04-cyclone", caret: true },
+  { label: "Climate", icon: "05-climate", caret: true },
+  { label: "Agri-Weather", icon: "06-agri", caret: true },
+  { label: "Astronomy", icon: "07-astronomy", caret: true },
+  { label: "Regional Forecast", icon: "09-layers", caret: true },
+];
+
 // Icons copied from the PAGASA website sidebar: menu, weather, flood, tropical cyclone, climate,
 // agri-weather, astronomy, hazards, products, vacancy, gender and development, publications, about.
 const RAIL_ICONS = [
@@ -135,6 +147,8 @@ function ReportPageInner() {
   const [activeTab, setActiveTab] = useState<Tab>(
     TABS.includes(initialTab) ? initialTab : "Cover Page"
   );
+
+  const [govMenuOpen, setGovMenuOpen] = useState(false);
 
   const [regionsPanelOpen, setRegionsPanelOpen] =
     useState(false);
@@ -292,6 +306,18 @@ function ReportPageInner() {
           color: #ffffff;
         }
 
+        /* PAGASA-style mobile menu: hidden on desktop, shown at <= 760px */
+        .govph-topbar {
+          position: relative;
+          z-index: 80;
+        }
+        .govph-mobile-label,
+        .govph-mobile-toggle,
+        .govph-mobile-menu,
+        .govph-mobile-backdrop {
+          display: none;
+        }
+
         @media (max-width: 1100px) {
           .govph-extra,
           .govph-search,
@@ -380,6 +406,79 @@ function ReportPageInner() {
 
           .pagasa-header-name br {
             display: none;
+          }
+
+          .govph-mobile-label {
+            display: block;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: .02em;
+            color: #fff;
+          }
+
+          .govph-mobile-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            width: 38px;
+            height: 30px;
+            border: 1px solid rgba(255, 255, 255, .55);
+            border-radius: 4px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+          }
+
+          .govph-mobile-backdrop.open {
+            display: block;
+            position: fixed;
+            inset: 0;
+            z-index: 70;
+            background: rgba(0, 0, 0, .25);
+          }
+
+          .govph-mobile-menu.open {
+            display: block;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 90;
+            background: #1c2b3a;
+            border-top: 1px solid rgba(255, 255, 255, .12);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, .35);
+            max-height: calc(100dvh - 60px);
+            overflow-y: auto;
+          }
+
+          .govph-mobile-menu button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 12px 18px;
+            border: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            background: transparent;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+          }
+
+          .govph-mobile-menu button:active {
+            background: #263a4f;
+          }
+
+          .govph-mobile-menu img {
+            display: block;
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
           }
 
           .mobile-menu-button {
@@ -567,6 +666,18 @@ function ReportPageInner() {
           style={{ display: "block", flexShrink: 0 }}
         />
 
+        <div className="govph-mobile-label">GOVPH</div>
+
+        <button
+          type="button"
+          className="govph-mobile-toggle"
+          aria-label={govMenuOpen ? "Close GOVPH menu" : "Open GOVPH menu"}
+          aria-expanded={govMenuOpen}
+          onClick={() => setGovMenuOpen((open) => !open)}
+        >
+          {govMenuOpen ? "✕" : "☰"}
+        </button>
+
         <span
           className="govph-extra"
           style={{
@@ -641,6 +752,31 @@ function ReportPageInner() {
           }}
           readOnly
         />
+
+        {/* PAGASA-style mobile menu (phones only) */}
+        <div
+          className={`govph-mobile-backdrop${govMenuOpen ? " open" : ""}`}
+          onClick={() => setGovMenuOpen(false)}
+        />
+        <div className={`govph-mobile-menu${govMenuOpen ? " open" : ""}`} role="menu">
+          {GOV_MOBILE_MENU.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              role="menuitem"
+              onClick={() => setGovMenuOpen(false)}
+            >
+              <span>
+                {item.label}
+                {item.caret ? <span style={{ opacity: 0.7, marginLeft: 4, fontSize: 10 }}>▾</span> : null}
+              </span>
+              {item.icon ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={`/rail-icons/${item.icon}.png`} alt="" width={22} height={22} draggable={false} />
+              ) : null}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* =====================================
