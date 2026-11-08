@@ -65,6 +65,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Reading the report content is PUBLIC: every visitor's /report page loads it from here.
+  // Without this early exit, visitors who are not logged in fell through to the session check
+  // below and were redirected to the login page instead of getting the data, so only the
+  // logged-in admin could see regions. Only GET is public; saving (POST) still needs a login.
+  if (pathname === "/api/content" && request.method === "GET") {
+    return NextResponse.next();
+  }
+
   const isAdminPage = pathname === "/" || isAdminPagePath(pathname);
   const isAdminApi = isAdminApiPath(pathname, request.method);
 
