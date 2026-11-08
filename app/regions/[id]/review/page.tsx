@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import AuditLogNav from "../../../components/AuditLogNav";
 import { getRegionReport, refreshContent, saveRegionReport } from "../../../lib/reportStore";
-import type { RainfallChartData } from "../../../lib/rainfallChart";
+import { getUploadDraft, clearUploadDraft } from "../../../lib/uploadDraft";
 
 export default function RegionsReviewPage() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function RegionsReviewPage() {
     if (editorRef.current && initialSummary) {
       editorRef.current.innerText = initialSummary;
     }
-  }, []);
+  }, [initialSummary]);
 
   const execFormat = (command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -77,18 +77,18 @@ export default function RegionsReviewPage() {
       let draftImages = fallbackImages;
       let draftChart = fallbackChart;
       let draftMonth = fallbackMonth;
-      const rawDraft = sessionStorage.getItem(`region-upload-draft:${id}`);
-      if (rawDraft) {
-        const draft = JSON.parse(rawDraft) as {
-          images?: Array<{ data: string }>;
-          chart?: RainfallChartData | null;
-          month?: string;
-        };
+      const draft = getUploadDraft(id);
+      if (draft) {
         if (draft.images?.length) {
           draftImages = draft.images.map(image => image.data);
         }
         draftChart = draft.chart ?? null;
         if (draft.month) draftMonth = draft.month;
+      }
+
+      // Never publish a report without its map image: it would fall back to the placeholder layout.
+      if (!draftImages.length) {
+        throw new Error("The uploaded map image is missing, so the report would not have its map layout. Go back, upload the map image again, and generate the summary before saving.");
       }
 
       await saveRegionReport({
@@ -105,6 +105,7 @@ export default function RegionsReviewPage() {
       return;
     }
 
+    clearUploadDraft(id); // saved — a stale draft must not overwrite later saves
     router.push(
       `/regions/${id}/print?summary=${encodeURIComponent(currentSummary)}&region=${encodeURIComponent(regionName)}&month=${encodeURIComponent(month)}`
     );

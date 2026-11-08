@@ -10,6 +10,7 @@ import CsvValidationPanel from "../../../components/CsvValidationPanel";
 import { MissingDataError, UpdatedCsvUploader, UpdatedCsvPassed, MissingDataWarning } from "../../../components/CsvMissingData";
 import CsvCleaningResults from "../../../components/CsvCleaningResults";
 import ZoomableImage from "../../../components/ZoomableImage";
+import { getUploadDraft, setUploadDraft } from "../../../lib/uploadDraft";
 import { csvTextFromBytes, replaceMissingWithZero, buildCleaningReport } from "../../../lib/csvCleaning";
 import { csvItemState, substitutionNotice, type CsvItem } from "../../../lib/csvWorkflow";
 
@@ -40,6 +41,17 @@ You are an AI Climate Interpretation Assistant for the DOST-PAGASA Agri-Weather 
 Your task is to produce concise regional agricultural climate summaries based on uploaded climate and crop condition maps.
 
 The output must closely follow the general writing style of PAGASA regional agricultural weather summaries: formal, factual, observational, concise, and focused on regional weather conditions and their implications for agriculture.
+
+## REGION VERIFICATION (DO THIS FIRST)
+
+The target region for this report is: ${regionName}.
+
+Before writing anything, check the title, legend, labels, province names, and geographic coverage of EVERY uploaded map. If any map clearly shows a different region or area than the target region (for example, a map of Visayas or another region's provinces), do NOT write a summary. Instead return ONLY this single line and nothing else:
+
+REGION_MISMATCH: <name of the region actually shown in the map(s)>
+
+If the region shown cannot be identified, write: REGION_MISMATCH: unidentified region
+Only continue with the summary when all maps match the target region.
 
 ## MAIN OBJECTIVE
 
@@ -233,6 +245,7 @@ export default function RegionsEditPage() {
   const [csvItems, setCsvItems] = useState<CsvItem[]>([]);
   const csvIdRef = useRef(0);
   const [summary, setSummary] = useState("");
+  const [regionMismatch, setRegionMismatch] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -263,6 +276,7 @@ export default function RegionsEditPage() {
     if (!files) return;
     const valid = Array.from(files).filter(f => f.type.startsWith("image/"));
     setImageFiles(prev => [...prev, ...valid]);
+    setRegionMismatch(false);
     setImagePreviews(prev => [...prev, ...valid.map(f => URL.createObjectURL(f))]);
     setSaved(false);
     // reset input so same file can be re-added
@@ -271,6 +285,7 @@ export default function RegionsEditPage() {
 
   const removeImage = (i: number) => {
     setImageFiles(prev => prev.filter((_, j) => j !== i));
+    setRegionMismatch(false);
     setImagePreviews(prev => prev.filter((_, j) => j !== i));
   };
 
@@ -300,10 +315,9 @@ export default function RegionsEditPage() {
   };
 
   useEffect(() => {
-    const raw = sessionStorage.getItem(`region-upload-draft:${regionId}`);
-    if (!raw) return;
+    const draft = getUploadDraft(regionId);
+    if (!draft) return;
     try {
-      const draft = JSON.parse(raw) as { images?: { name: string; type: string; data: string }[]; csvFiles?: { name: string; text: string }[]; summary?: string };
       const imageFilesRestored = (draft.images ?? []).map(item => new File([Uint8Array.from(atob(item.data.split(",").pop() ?? ""), c => c.charCodeAt(0))], item.name, { type: item.type }));
       if (imageFilesRestored.length) {
         setImageFiles(imageFilesRestored);
@@ -391,6 +405,7 @@ export default function RegionsEditPage() {
     }
     if (csvBlocked) { setError(csvBlockReason); return; }
     setError(null);
+    setRegionMismatch(false);
     setGenerating(true);
     try {
       // Build image blocks for all uploaded images
@@ -435,7 +450,15 @@ export default function RegionsEditPage() {
       const data = await res.json();
       if (data.error) throw new Error(data.error.message ?? "API error");
       const text = data.content?.find((b: any) => b.type === "text")?.text ?? "";
-      setSummary(text);
+      const mismatch = text.match(/REGION_MISMATCH:\s*(.+)/i);
+      if (mismatch) {
+        const shown = mismatch[1].trim().replace(/[.\s]+$/, "");
+        setRegionMismatch(true);
+        setSummary(`Cannot generate a summary: the uploaded map image(s) show ${shown}, not ${regionName}. Please upload the correct region's maps and generate again.`);
+      } else {
+        setRegionMismatch(false);
+        setSummary(text);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -464,6 +487,7 @@ export default function RegionsEditPage() {
   };
 
   const handleNext = async () => {
+    if (regionMismatch) { setError("The uploaded map does not match this region. Upload the correct maps and generate again."); return; }
     if (!imageFiles.length || !csvItems.length) { setError("Upload both an image and a CSV before continuing."); return; }
     if (!monthsMatch(imageFiles, csvItems.map(item => item.file))) {
       setError(describeMonthMismatch(imageFiles, csvItems.map(item => item.file)));
@@ -474,15 +498,18 @@ export default function RegionsEditPage() {
     try {
       const draftImages = await Promise.all(imageFiles.map(async file => ({ name: file.name, type: file.type, data: await toBase64File(file) })));
       const draftCsv = await Promise.all(csvItems.map(async item => ({ name: item.file.name, text: await readAsText(item.file) })));
-      sessionStorage.setItem(`region-upload-draft:${regionId}`, JSON.stringify({
+      // In-memory first (no size limit), sessionStorage only as a best-effort copy — see lib/uploadDraft.ts.
+      setUploadDraft(regionId, {
         images: draftImages,
         csvFiles: draftCsv,
         summary,
         chart: buildChart(),
         month: new Date().toLocaleString("default", { month: "long", year: "numeric" }),
-      }));
+      });
     } catch (err) {
       console.error("Could not preserve the region upload draft", err);
+      setError("Could not read the uploaded files. Please re-upload the map image and try again.");
+      return;
     }
     setSaved(true);
 
@@ -614,14 +641,14 @@ export default function RegionsEditPage() {
               <button
                 className="btn-next"
                 onClick={handleNext}
-                disabled={!summary || !imageFiles.length || !csvItems.length || csvBlocked}
-                title={csvBlocked ? csvBlockReason : !imageFiles.length || !csvItems.length ? "Upload both an image and a CSV, then generate the summary before continuing." : undefined}
+                disabled={!summary || regionMismatch || !imageFiles.length || !csvItems.length || csvBlocked}
+                title={regionMismatch ? "The uploaded map does not match this region. Upload the correct maps and generate again." : csvBlocked ? csvBlockReason : !imageFiles.length || !csvItems.length ? "Upload both an image and a CSV, then generate the summary before continuing." : undefined}
                 style={{
                   background: saved ? "#16a34a" : "#003087",
                   color: "#fff", border: "none", borderRadius: 4,
                   padding: "6px 18px", fontSize: 13, fontWeight: 600,
-                  cursor: summary && imageFiles.length && csvItems.length && !csvBlocked ? "pointer" : "not-allowed",
-                  opacity: summary && imageFiles.length && csvItems.length && !csvBlocked ? 1 : 0.4, transition: "background .15s",
+                  cursor: summary && !regionMismatch && imageFiles.length && csvItems.length && !csvBlocked ? "pointer" : "not-allowed",
+                  opacity: summary && !regionMismatch && imageFiles.length && csvItems.length && !csvBlocked ? 1 : 0.4, transition: "background .15s",
                 }}>
                 {saved ? "✓ Saved" : "Next"}
               </button>
@@ -795,9 +822,9 @@ export default function RegionsEditPage() {
               <div
                 aria-live="polite"
                 style={{
-                  minHeight: 220, border: "1px solid #dde3ea", borderRadius: 5,
-                  padding: "10px 12px", fontSize: 13, lineHeight: 1.75, color: "#1f2937",
-                  background: generating ? "#f9fafb" : "#fff", whiteSpace: "pre-wrap",
+                  minHeight: 220, border: regionMismatch ? "1px solid #d32f2f" : "1px solid #dde3ea", borderRadius: 5,
+                  padding: "10px 12px", fontSize: 13, lineHeight: 1.75, color: regionMismatch ? "#b91c1c" : "#1f2937",
+                  background: generating ? "#f9fafb" : regionMismatch ? "#fef2f2" : "#fff", whiteSpace: "pre-wrap",
                 }}
               >
                 {summary || (generating ? "Generating regional summary…" : "Upload the required image and CSV, then click Generate.")}

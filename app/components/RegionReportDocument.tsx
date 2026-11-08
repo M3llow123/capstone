@@ -113,7 +113,9 @@ function LegacyRegionReport({
         margin: "0 auto",
         padding: "28px 32px 24px",
       }}>
-        <h1 className="a4-title">{regionName}</h1>
+        {/* One line for every region: long names (e.g. BARMM) shrink to fit instead of wrapping,
+            and the title block has a fixed height so the columns below always start at the same place. */}
+        <h1 className="a4-title" style={{ whiteSpace: "nowrap", height: 32, fontSize: Math.min(28, Math.floor(730 / (Math.max(regionName.length, 1) * 0.56))) }}>{regionName}</h1>
 
         <div style={{ display: "flex", gap: 16, marginTop: 10, alignItems: "flex-start" }}>
           {/* LEFT: 2 stacked maps */}

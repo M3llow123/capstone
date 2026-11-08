@@ -343,7 +343,8 @@ function ReportPageInner() {
           }
 
           .govph-topbar > span:not(:first-of-type),
-          .pagasa-clock {
+          .pagasa-clock,
+          div.pagasa-clock {
             display: none !important;
           }
 
@@ -351,6 +352,11 @@ function ReportPageInner() {
             min-height: 68px;
             padding: 7px 12px !important;
             gap: 10px !important;
+          }
+
+          .pagasa-header .pagasa-clock {
+            position: absolute;
+            display: none !important;
           }
 
           .pagasa-header-logo {
@@ -380,14 +386,15 @@ function ReportPageInner() {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             flex-shrink: 0;
             border: 1px solid #d8dde5;
-            border-radius: 4px;
+            border-radius: 6px;
             background: #fff;
             color: #282a35;
             cursor: pointer;
+            font-size: 21px;
           }
 
           .icon-rail,
@@ -404,6 +411,7 @@ function ReportPageInner() {
             left: 0;
             width: min(320px, 88vw) !important;
             padding: 24px 20px 90px !important;
+            border-top: 1px solid rgba(255,255,255,.12);
             box-shadow: 8px 0 24px rgba(0, 0, 0, .24);
           }
 
@@ -411,6 +419,17 @@ function ReportPageInner() {
             min-height: 36px;
             font-size: 15px !important;
             line-height: 1.35 !important;
+            padding: 8px 10px !important;
+            border-radius: 4px;
+          }
+
+          .report-secondary.mobile-open button:hover,
+          .report-secondary.mobile-open button:focus-visible {
+            background: rgba(255,255,255,.1) !important;
+          }
+
+          .report-secondary.mobile-open > div {
+            gap: 8px !important;
           }
 
           .mobile-menu-overlay.open {
@@ -498,6 +517,26 @@ function ReportPageInner() {
 
           .report-floating-panel > div {
             max-height: calc(100dvh - 180px) !important;
+          }
+
+          .report-region-panel,
+          .report-category-panel {
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            width: calc(100% - 24px) !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 12px !important;
+            overflow: visible !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .12) !important;
+            z-index: 1 !important;
+          }
+
+          .report-region-panel .region-report-scroll {
+            max-height: calc(100dvh - 230px) !important;
+            border-top: 1px solid #eef1f5;
           }
         }
       `}</style>
@@ -969,7 +1008,7 @@ function ReportPageInner() {
           {selectedRegionId &&
             !regionsPanelOpen && (
               <div
-              className="report-floating-panel"
+              className="report-floating-panel report-region-panel"
               style={{
                   ...FLOATING_PANEL_POSITION,
                   width: 620,
@@ -985,6 +1024,7 @@ function ReportPageInner() {
                 {/* Region report header */}
 
                 <div
+                  className="region-report-scroll"
                   style={{
                     background: "#3b3f52",
                     color: "#fff",
@@ -1144,7 +1184,7 @@ function ReportPageInner() {
 
           {selectedCategory && (
             <div
-              className="report-floating-panel"
+              className="report-floating-panel report-category-panel"
               style={{
                 ...FLOATING_PANEL_POSITION,
                 width: 452,

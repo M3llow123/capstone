@@ -41,10 +41,28 @@ async function uploadDataUrl(dataUrl: string, folder: string): Promise<string> {
   if (buffer.length > MAX_IMAGE_BYTES) throw new Error("Image is too large (max 8 MB).");
 
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const { error } = await supabaseAdmin.storage
-    .from(BUCKET)
-    .upload(path, buffer, { contentType: mime, upsert: false });
-  if (error) throw new Error(`Upload failed: ${error.message}`);
+  let uploadError: { message: string } | null = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { error } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .upload(path, buffer, { contentType: mime, upsert: false });
+    if (!error) {
+      uploadError = null;
+      break;
+    }
+    uploadError = error;
+    if (attempt < 3 && /fetch failed|network|timeout/i.test(error.message)) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+    } else {
+      break;
+    }
+  }
+  if (uploadError) {
+    const detail = /fetch failed/i.test(uploadError.message)
+      ? "Storage connection failed. Check your internet connection and Supabase Storage settings."
+      : uploadError.message;
+    throw new Error(`Upload failed: ${detail}`);
+  }
 
   return supabaseAdmin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
