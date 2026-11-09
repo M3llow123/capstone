@@ -294,7 +294,7 @@ export default function RegionReportDocument({
         }}
       >
         {/* Uploaded image, cropped just above the static graph */}
-        <div style={{ position: "relative", width: "100%", aspectRatio: `${IMG_W} / ${cropH}`, overflow: "hidden" }}>
+        <div style={{ position: "relative", width: "100%", aspectRatio: `${IMG_W} / ${cropH}`, overflow: "hidden", containerType: "inline-size" } as React.CSSProperties}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={imgRef}
@@ -462,26 +462,47 @@ function ImageGraphHover({ src, regionName }: { src: string; regionName: string 
   );
 }
 
-/** Summary text that shrinks (down to 7px) until it fits inside its box, so it is never cut off. */
+/**
+ * Summary text that shrinks until it fits inside its box, so it is never cut off.
+ *
+ * The size is stored as a percentage of the report's width (cqw units), not in pixels.
+ * The box itself scales with the page width, so when the page is printed / saved as a PDF
+ * (a different width than on screen) the text scales with it and still fits.
+ */
 function SummaryBox({ paragraphs, style }: { paragraphs: string[]; style: React.CSSProperties }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [fs, setFs] = useState(13);
+  const [pct, setPct] = useState(1.7); // font size as % of the report width
   const key = paragraphs.join("\u0001");
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    let size = 13;
-    el.style.fontSize = `${size}px`;
-    while (size > 7 && el.scrollHeight > el.clientHeight + 1) {
-      size -= 0.25;
+    const wrapper = el?.parentElement;
+    if (!el || !wrapper) return;
+
+    const fit = () => {
+      const width = wrapper.clientWidth;
+      if (!width) return;
+      const max = width * 0.017;   // about 13px on a 780px-wide report
+      const min = width * 0.009;   // about 7px
+      const step = width * 0.0003;
+      let size = max;
       el.style.fontSize = `${size}px`;
-    }
-    setFs(size);
+      while (size > min && el.scrollHeight > el.clientHeight + 1) {
+        size -= step;
+        el.style.fontSize = `${size}px`;
+      }
+      el.style.fontSize = "";
+      // 4% safety margin: printing wraps lines a little differently than the screen does.
+      setPct(((size / width) * 100) * 0.96);
+    };
+
+    fit();
+    // Re-fit once fonts are ready (text metrics can change after they load).
+    void document.fonts?.ready.then(fit);
   }, [key]);
 
   return (
-    <div ref={ref} style={{ ...style, fontSize: fs }}>
+    <div ref={ref} style={{ ...style, fontSize: `${pct}cqw` }}>
       {paragraphs.map((p, i) => (
         <p key={i} style={{ margin: "0 0 0.9em" }}>{p.trim()}</p>
       ))}
