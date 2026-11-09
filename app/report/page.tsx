@@ -119,15 +119,19 @@ const REGIONS_LIST: { id: string; name: string }[] = [
 // category image). They are pinned to the right edge of the main area, and
 // the page content is given matching right-hand space while a panel is open
 // (see `reservedWidth` below), so the panel never covers the content.
+//  - right: 12 matches the 12px side margin of the blue title bar, so the panel's
+//    right edge lines up with the bar's right edge.
+//  - top: 134 matches where the page content (cover image, etc.) starts, so the
+//    panel's top edge lines up with the top of the content on the left.
 const FLOATING_PANEL_POSITION = {
   position: "absolute",
-  top: 108,
-  right: 24,
+  top: 134,
+  right: 12,
 } as const;
 
 // Never wider than the main area on small screens.
 const FLOATING_PANEL_FIT = {
-  maxWidth: "calc(100% - 48px)",
+  maxWidth: "calc(100% - 24px)",
 } as const;
 
 export default function ReportPage() {
