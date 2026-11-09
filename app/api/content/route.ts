@@ -144,7 +144,7 @@ async function removeByUrls(urls: string[]) {
 export async function GET() {
   const [images, preface, overview, regions] = await Promise.all([
     supabaseAdmin.from("report_images").select("key,image_url,updated_at"),
-    supabaseAdmin.from("preface_blocks").select("id,type,content,updated_at").order("position"),
+    supabaseAdmin.from("preface_blocks").select("id,type,content,updated_at").order("updated_at"),
     supabaseAdmin
       .from("overview")
       .select("text,form_link,form_label,updated_at")
@@ -237,17 +237,21 @@ async function savePreface(blocks: unknown) {
 
   const { data: old } = await supabaseAdmin.from("preface_blocks").select("id,type,content");
 
-  const rows: { position: number; type: "text" | "image"; content: string }[] = [];
+  // Block order is kept with strictly increasing timestamps (1 ms apart), so this works
+  // without a separate "position" column in the table.
+  const base = Date.now();
+  const stamp = () => new Date(base + rows.length).toISOString();
+  const rows: { type: "text" | "image"; content: string; updated_at: string }[] = [];
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i] as BlockIn;
     const content = String(b?.content ?? "");
     if (b?.type === "text") {
-      rows.push({ position: i, type: "text", content });
+      rows.push({ type: "text", content, updated_at: stamp() });
     } else if (b?.type === "image") {
       if (isDataUrl(content)) {
-        rows.push({ position: i, type: "image", content: await uploadDataUrl(content, "preface") });
+        rows.push({ type: "image", content: await uploadDataUrl(content, "preface"), updated_at: stamp() });
       } else if (isHttpUrl(content)) {
-        rows.push({ position: i, type: "image", content });
+        rows.push({ type: "image", content, updated_at: stamp() });
       }
     }
   }
@@ -258,7 +262,7 @@ async function savePreface(blocks: unknown) {
       .from("preface_blocks")
       .insert(rows)
       .select("id,type,content,updated_at")
-      .order("position");
+      .order("updated_at");
     if (error) throw new Error(error.message);
     saved = data ?? [];
   }
@@ -428,7 +432,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Unknown request." }, { status: 400 });
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Save failed.";
+    let message = err instanceof Error ? err.message : "Save failed.";
+    if (typeof body.type === "string" && body.type.startsWith("preface")) {
+      // Temporary diagnostic (login-only route): which Supabase project is this server using?
+      try {
+        message += ` [database: ${new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").host}]`;
+      } catch {
+        /* ignore */
+      }
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
