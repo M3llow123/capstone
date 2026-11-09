@@ -169,6 +169,18 @@ function ReportPageInner() {
     useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // On phones the region report sits below the cover page, so bring it into view
+  // once a region has been chosen (otherwise it would look like nothing happened).
+  const scrollToRegionPanel = () => {
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    window.setTimeout(() => {
+      document
+        .querySelector(".report-region-panel")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+  };
+
   const [now, setNow] = useState<Date | null>(null);
 
   /* =========================================
@@ -631,6 +643,17 @@ function ReportPageInner() {
             overflow: visible !important;
             box-shadow: 0 2px 10px rgba(0, 0, 0, .12) !important;
             z-index: 1 !important;
+          }
+
+          /* Phones: show the cover page + tabs first, the region report below them,
+             and keep the footer at the very bottom. */
+          .report-region-panel,
+          .report-category-panel {
+            order: 5 !important;
+          }
+
+          .report-main > :last-child {
+            order: 10;
           }
 
           .report-region-panel .region-report-scroll {
@@ -1115,6 +1138,7 @@ function ReportPageInner() {
                         setRegionsPanelOpen(false);
                         setRegionsListOpen(false);
                         setSelectedCategory(null);
+                        scrollToRegionPanel();
                       }}
                       style={{
                         display: "block",
@@ -1234,6 +1258,7 @@ function ReportPageInner() {
                           onClick={() => {
                             setSelectedRegionId(region.id);
                             setRegionsListOpen(false);
+                            scrollToRegionPanel();
                           }}
                           style={{
                             width: "100%",
