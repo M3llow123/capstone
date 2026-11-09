@@ -240,7 +240,17 @@ function createImageStore(key: ImageKey, auditLabel: string) {
 
   const onChange = (cb: () => void): (() => void) => subscribe(EVENTS.image[key], cb);
 
-  return { save, get, onChange };
+  /** Delete the saved image so the public report no longer shows it. */
+  const remove = async (): Promise<void> => {
+    if (typeof window === "undefined") return;
+    await postContent({ type: "image_delete", key });
+    delete cache.images[key];
+    writeMirror();
+    emit(EVENTS.image[key]);
+    void logAudit(`DELETE ${auditLabel}`);
+  };
+
+  return { save, get, onChange, remove };
 }
 
 const cornStore = createImageStore("corn", "CORN CROP STAGE");
@@ -270,11 +280,13 @@ export const onDroughtImageChanged = droughtStore.onChange;
 
 const coverStore = createImageStore("cover", "COVER PAGE");
 export const saveCoverImage = coverStore.save;
+export const deleteCoverImage = coverStore.remove;
 export const getCoverImage = (): CoverPageData | null => coverStore.get();
 export const onCoverImageChanged = coverStore.onChange;
 
 const aboutStore = createImageStore("about", "ABOUT THIS REPORT");
 export const saveAboutImage = aboutStore.save;
+export const deleteAboutImage = aboutStore.remove;
 export const getAboutImage = (): AboutPageData | null => aboutStore.get();
 export const onAboutImageChanged = aboutStore.onChange;
 
@@ -287,6 +299,16 @@ export async function savePreface(blocks: PrefaceBlock[]): Promise<void> {
   writeMirror();
   emit(EVENTS.preface);
   void logAudit("UPDATE PREFACE");
+}
+
+/** Delete the whole Preface (all blocks and their images). */
+export async function deletePreface(): Promise<void> {
+  if (typeof window === "undefined") return;
+  await postContent({ type: "preface_delete" });
+  cache.preface = null;
+  writeMirror();
+  emit(EVENTS.preface);
+  void logAudit("DELETE PREFACE");
 }
 
 /** Get the current Preface content, if any has been saved. */
@@ -309,6 +331,16 @@ export async function saveOverview(data: Omit<OverviewData, "updatedAt">): Promi
   writeMirror();
   emit(EVENTS.overview);
   void logAudit("UPDATE OVERVIEW");
+}
+
+/** Delete the Overview text and request-form link. */
+export async function deleteOverview(): Promise<void> {
+  if (typeof window === "undefined") return;
+  await postContent({ type: "overview_delete" });
+  cache.overview = null;
+  writeMirror();
+  emit(EVENTS.overview);
+  void logAudit("DELETE OVERVIEW");
 }
 
 /** Get the current Overview content, if any has been saved. */

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { saveAboutImage, getAboutImage } from "../../lib/reportStore";
+import { saveAboutImage, getAboutImage, deleteAboutImage } from "../../lib/reportStore";
 import AuditLogNav from "../../components/AuditLogNav";
 import UserMenu from "@/app/components/UserMenu";
 import ZoomableImage from "@/app/components/ZoomableImage";
@@ -22,6 +22,8 @@ export default function AboutThisReportEditPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const [impactOpen, setImpactOpen] = useState(true);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
 
@@ -63,6 +65,25 @@ export default function AboutThisReportEditPage() {
       setError("Something went wrong saving the image.");
     }
   };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete the About this Report image? It will no longer be shown on the public report.")) return;
+    setError(null);
+    setDeleting(true);
+    try {
+      await deleteAboutImage();
+      setImageFile(null);
+      setImagePreview(null);
+      setSaved(false);
+      setDeleted(true);
+      setTimeout(() => setDeleted(false), 2500);
+    } catch {
+      setError("Something went wrong deleting the image.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   const impactChildren = ["Corn Crop Stage and Water Sufficiency", "Rice Crop Stage and Water Sufficiency", "Monthly Rainfall", "Tropical Cyclone", "Crop Condition and Drought Indicator", "Regions", "Cover Page", "About this Report", "Preface", "Overview"];
 
@@ -183,6 +204,20 @@ export default function AboutThisReportEditPage() {
           <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden", maxWidth: 640 }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontWeight: 600, fontSize: 14, color: "#222" }}>Update</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                aria-label="Delete"
+                style={{
+                  background: "#fff", color: "#d32f2f", border: "1px solid #d32f2f", borderRadius: 4,
+                  height: 30, padding: "0 12px", fontSize: 13, fontWeight: 600,
+                  cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                {deleting ? "Deleting…" : deleted ? "Deleted ✓" : "Delete"}
+              </button>
               <button
                 className="btn-save"
                 onClick={handleSave}
@@ -201,6 +236,7 @@ export default function AboutThisReportEditPage() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" /><path d="M17 21v-8H7v8M7 3v5h8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 )}
               </button>
+              </div>
             </div>
 
             <div style={{ padding: "18px 16px" }}>

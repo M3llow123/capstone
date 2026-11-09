@@ -93,6 +93,43 @@ async function deleteRegion(id: unknown) {
   return { deleted: String(n) };
 }
 
+/** Removes one saved image (Cover Page, About this Report, ...) and its uploaded file. */
+async function deleteImage(key: unknown) {
+  if (typeof key !== "string" || !IMAGE_KEYS.includes(key as ImageKey)) {
+    throw new Error("Unknown image.");
+  }
+  const { data: existing } = await supabaseAdmin
+    .from("report_images")
+    .select("image_url")
+    .eq("key", key)
+    .maybeSingle();
+
+  const { error } = await supabaseAdmin.from("report_images").delete().eq("key", key);
+  if (error) throw new Error(error.message);
+
+  if (existing?.image_url) await removeByUrls([existing.image_url]);
+  return { deleted: key };
+}
+
+/** Removes the whole Preface (all text/image blocks and the uploaded images). */
+async function deletePreface() {
+  const { data: old } = await supabaseAdmin.from("preface_blocks").select("id,type,content");
+  const ids = (old ?? []).map((r) => r.id);
+  if (ids.length) {
+    const { error } = await supabaseAdmin.from("preface_blocks").delete().in("id", ids);
+    if (error) throw new Error(error.message);
+  }
+  await removeByUrls((old ?? []).filter((r) => r.type === "image").map((r) => r.content));
+  return { deleted: true };
+}
+
+/** Removes the Overview text and request-form link. */
+async function deleteOverview() {
+  const { error } = await supabaseAdmin.from("overview").delete().eq("id", 1);
+  if (error) throw new Error(error.message);
+  return { deleted: true };
+}
+
 async function removeByUrls(urls: string[]) {
   const paths = urls.map(pathFromPublicUrl).filter((p): p is string => !!p);
   if (paths.length === 0) return;
@@ -381,6 +418,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(await saveRegion(body));
       case "region_delete":
         return NextResponse.json(await deleteRegion(body.id));
+      case "image_delete":
+        return NextResponse.json(await deleteImage(body.key));
+      case "preface_delete":
+        return NextResponse.json(await deletePreface());
+      case "overview_delete":
+        return NextResponse.json(await deleteOverview());
       default:
         return NextResponse.json({ error: "Unknown request." }, { status: 400 });
     }

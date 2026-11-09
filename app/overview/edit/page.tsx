@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { saveOverview, getOverview } from "../../lib/reportStore";
+import { saveOverview, getOverview, deleteOverview } from "../../lib/reportStore";
 import AuditLogNav from "../../components/AuditLogNav";
 import UserMenu from "@/app/components/UserMenu";
 import ZoomableImage from "@/app/components/ZoomableImage";
@@ -112,6 +112,8 @@ export default function OverviewEditPage() {
   const [formLabel, setFormLabel] = useState("Request Form");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const [impactOpen, setImpactOpen] = useState(true);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
 
@@ -216,6 +218,28 @@ export default function OverviewEditPage() {
       setError("Something went wrong saving the Overview.");
     }
   };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete the Overview (text and request form link)? It will no longer be shown on the public report.")) return;
+    setError(null);
+    setDeleting(true);
+    try {
+      await deleteOverview();
+      setText("");
+      setFormLink("");
+      setFormLabel("Request Form");
+      setImageFiles([]);
+      setImagePreviews([]);
+      setSaved(false);
+      setDeleted(true);
+      setTimeout(() => setDeleted(false), 2500);
+    } catch {
+      setError("Something went wrong deleting the Overview.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   const impactChildren = ["Corn Crop Stage and Water Sufficiency", "Rice Crop Stage and Water Sufficiency", "Monthly Rainfall", "Tropical Cyclone", "Crop Condition and Drought Indicator", "Regions", "Cover Page", "About this Report", "Preface", "Overview"];
 
@@ -384,6 +408,7 @@ export default function OverviewEditPage() {
                   : <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Generate</>
                 }
               </button>
+              </div>
             </div>
 
             <div style={{ padding: "18px 16px" }}>
@@ -455,6 +480,20 @@ export default function OverviewEditPage() {
           <div className="overview-update-card" style={{ background: "#fff", borderRadius: 6, border: "1px solid #dde3ea", overflow: "hidden" }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontWeight: 600, fontSize: 14, color: "#222" }}>Update</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                aria-label="Delete"
+                style={{
+                  background: "#fff", color: "#d32f2f", border: "1px solid #d32f2f", borderRadius: 4,
+                  height: 30, padding: "0 12px", fontSize: 13, fontWeight: 600,
+                  cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                {deleting ? "Deleting…" : deleted ? "Deleted ✓" : "Delete"}
+              </button>
               <button
                 className="btn-save"
                 onClick={handleSave}
