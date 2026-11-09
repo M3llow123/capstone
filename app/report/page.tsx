@@ -169,14 +169,17 @@ function ReportPageInner() {
     useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // On phones the region report sits below the cover page, so bring it into view
-  // once a region has been chosen (otherwise it would look like nothing happened).
+  // On phones the region report, the Regions list and the other menu panels sit below the
+  // cover page, so bring them into view once something has been chosen (otherwise it would
+  // look like nothing happened).
   const scrollToRegionPanel = () => {
     if (typeof window === "undefined") return;
     if (!window.matchMedia("(max-width: 760px)").matches) return;
     window.setTimeout(() => {
       document
-        .querySelector(".report-region-panel, .report-regions-picker")
+        .querySelector(
+          ".report-region-panel, .report-regions-picker, .report-category-panel"
+        )
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 150);
   };
@@ -995,6 +998,7 @@ function ReportPageInner() {
                     setSelectedRegionId(null);
                     setRegionsPanelOpen(false);
                     setRegionsListOpen(false);
+                    scrollToRegionPanel();
                   }}
                   style={{
                     background: "transparent",
