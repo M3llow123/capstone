@@ -176,7 +176,7 @@ function ReportPageInner() {
     if (!window.matchMedia("(max-width: 760px)").matches) return;
     window.setTimeout(() => {
       document
-        .querySelector(".report-region-panel")
+        .querySelector(".report-region-panel, .report-regions-picker")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 150);
   };
@@ -631,6 +631,7 @@ function ReportPageInner() {
           }
 
           .report-region-panel,
+          .report-regions-picker,
           .report-category-panel {
             position: relative !important;
             top: auto !important;
@@ -648,6 +649,7 @@ function ReportPageInner() {
           /* Phones: show the cover page + tabs first, the region report below them,
              and keep the footer at the very bottom. */
           .report-region-panel,
+          .report-regions-picker,
           .report-category-panel {
             order: 5 !important;
           }
@@ -1025,6 +1027,7 @@ function ReportPageInner() {
 
               setRegionsListOpen(false);
               setSelectedCategory(null);
+              scrollToRegionPanel();
             }}
             style={{
               display: "flex",
@@ -1077,7 +1080,7 @@ function ReportPageInner() {
 
           {regionsPanelOpen && (
             <div
-              className="report-floating-panel"
+              className="report-floating-panel report-regions-picker"
               style={{
                 ...FLOATING_PANEL_POSITION,
                 width: 210,
