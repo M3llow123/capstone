@@ -173,7 +173,10 @@ async function postContent(body: unknown): Promise<any> {
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error ?? "Save failed. Please try again.");
+  if (!res.ok) {
+    if (res.status === 413) throw new Error("The upload is too large. Use a smaller image.");
+    throw new Error(data?.error ?? `Save failed (HTTP ${res.status}). Please try again.`);
+  }
   return data;
 }
 

@@ -16,6 +16,39 @@ const toBase64File = (file: File): Promise<string> =>
     r.readAsDataURL(file);
   });
 
+// Shrinks big photos before upload. The image travels inside the JSON save request as base64,
+// and Vercel rejects request bodies over ~4.5 MB, which made saving fail with a generic error.
+const MAX_DIMENSION = 1600;
+const SKIP_COMPRESS_BELOW = 400 * 1024; // already small: keep as is
+
+async function compressImage(file: File): Promise<string> {
+  if (file.type === "image/gif" || file.size < SKIP_COMPRESS_BELOW) return toBase64File(file);
+  const original = await toBase64File(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((res, rej) => {
+      const el = new Image();
+      el.onload = () => res(el);
+      el.onerror = () => rej(new Error("Could not read that image."));
+      el.src = original;
+    });
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return original;
+    ctx.fillStyle = "#fff"; // JPEG has no transparency
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    const out = canvas.toDataURL("image/jpeg", 0.85);
+    return out.length < original.length ? out : original;
+  } catch {
+    return original;
+  }
+}
+
 const makeId = () => Math.random().toString(36).slice(2, 10);
 
 export default function PrefaceEditPage() {
@@ -63,7 +96,7 @@ export default function PrefaceEditPage() {
     setError(null);
     setSaved(false);
     try {
-      const dataUrl = await toBase64File(file);
+      const dataUrl = await compressImage(file);
       setBlocks(prev => prev.map(b => (b.id === id ? { ...b, content: dataUrl } : b)));
     } catch {
       setError("Something went wrong reading that image.");
@@ -103,8 +136,10 @@ export default function PrefaceEditPage() {
         await savePreface(blocks);
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
-    } catch {
-      setError("Something went wrong saving the Preface.");
+    } catch (err) {
+      console.error("Preface save failed:", err);
+      const detail = err instanceof Error && err.message ? err.message : "";
+      setError(detail ? `Could not save the Preface: ${detail}` : "Something went wrong saving the Preface.");
     }
   };
 
@@ -118,8 +153,10 @@ export default function PrefaceEditPage() {
       setSaved(false);
       setDeleted(true);
       setTimeout(() => setDeleted(false), 2500);
-    } catch {
-      setError("Something went wrong deleting the Preface.");
+    } catch (err) {
+      console.error("Preface delete failed:", err);
+      const detail = err instanceof Error && err.message ? err.message : "";
+      setError(detail ? `Could not delete the Preface: ${detail}` : "Something went wrong deleting the Preface.");
     } finally {
       setDeleting(false);
     }
