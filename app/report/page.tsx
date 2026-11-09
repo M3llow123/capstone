@@ -1725,11 +1725,8 @@ function PrefaceSection() {
    COVER PAGE
 ========================================= */
 
-function CoverPage({
-  now,
-}: {
-  now: Date | null;
-}) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function CoverPage(_props: { now: Date | null }) {
   const [coverImage, setCoverImage] =
     useState<string | null>(null);
 
@@ -1744,14 +1741,6 @@ function CoverPage({
 
     return onCoverImageChanged(refresh);
   }, []);
-
-  const monthYear = now
-    ? `${now
-        .toLocaleString("default", {
-          month: "long",
-        })
-        .toUpperCase()} ${now.getFullYear()}`
-    : "MARCH 2026";
 
   /* =======================================
      UPLOADED COVER IMAGE
@@ -1784,171 +1773,52 @@ function CoverPage({
   }
 
   /* =======================================
-     DEFAULT COVER PAGE
+     NOTHING UPLOADED YET
+     (no default design is shown any more)
   ======================================== */
 
   return (
     <div
+      role="status"
       style={{
         width: "100%",
         maxWidth: 760,
-        background:
-          "linear-gradient(135deg, #a9c9a5 0%, #d9d3a1 55%, #a9c9a5 100%)",
+        minHeight: 260,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        background: "#fff",
+        border: "1px dashed #c3ccd6",
         borderRadius: 4,
-        overflow: "hidden",
-        position: "relative",
-        minHeight: 620,
+        padding: 32,
+        textAlign: "center",
+        color: "#888",
+        fontSize: 14,
+        boxSizing: "border-box",
       }}
     >
-      {/* Header strip */}
-
-      <div
-        style={{
-          padding: "22px 28px 14px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}
+      <svg
+        width="40"
+        height="40"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#aab4c0"
+        strokeWidth="1.6"
+        aria-hidden="true"
       >
-        <div
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: "50%",
-            background:
-              "conic-gradient(#0072bc 0 25%, #fcd116 25% 50%, #ce1126 50% 75%, #0072bc 75% 100%)",
-            flexShrink: 0,
-          }}
-        />
-
-        <div
-          style={{
-            fontSize: 14,
-            fontWeight: 900,
-            color: "#5b3a1a",
-            lineHeight: 1.3,
-            letterSpacing: ".01em",
-          }}
-        >
-          DEPARTMENT OF SCIENCE AND TECHNOLOGY -
-          <br />
-          PHILIPPINE ATMOSPHERICAL,
-          GEOPHYSICAL, AND
-          <br />
-          ASTRONOMICAL SERVICES ADMINISTRATION
-        </div>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="M21 15l-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <div style={{ fontWeight: 600, color: "#666" }}>
+        No cover page has been uploaded yet.
       </div>
-
-      {/* Title + graphic */}
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "10px 40px 30px",
-          gap: 24,
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 42,
-              fontWeight: 900,
-              color: "#2b6b2f",
-              lineHeight: 1.05,
-              fontFamily:
-                "Impact, 'Arial Black', sans-serif",
-            }}
-          >
-            CLIMATE IMPACT
-            <br />
-            ASSESSMENT
-          </div>
-
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: "#2b6b2f",
-              borderTop:
-                "3px solid #c0522f",
-              display: "inline-block",
-              paddingTop: 6,
-              marginTop: 6,
-            }}
-          >
-            FOR PHILIPPINE AGRICULTURE
-          </div>
-
-          <div
-            style={{
-              marginTop: 26,
-              display: "inline-block",
-              background: "#e79a2e",
-              color: "#fff",
-              padding: "10px 18px",
-              fontWeight: 700,
-              fontSize: 14,
-              lineHeight: 1.5,
-            }}
-          >
-            {monthYear}
-            <br />
-            NUMBER 03 | VOLUME 42
-          </div>
-        </div>
-
-        {/* Circular illustration */}
-
-        <div
-          style={{
-            width: 260,
-            height: 260,
-            borderRadius: "50%",
-            background:
-              "linear-gradient(180deg, #bfe3f0 0%, #bfe3f0 55%, #c9dc8f 55%, #8fae5a 100%)",
-            border:
-              "6px solid #e79a2e",
-            flexShrink: 0,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              bottom: 30,
-              left: "50%",
-              transform:
-                "translateX(-50%)",
-              fontSize: 64,
-            }}
-          >
-            🌾🌽
-          </div>
-        </div>
+      <div>
+        Add one from the CMS (Impact Assessment → Cover Page) and it will
+        appear here.
       </div>
-
-      {/* Dotted footer */}
-
-      <div
-        style={{
-          height: 130,
-          background:
-            "linear-gradient(120deg, #a9c9a5 0%, #dccf9c 50%, #a9c9a5 100%)",
-          backgroundImage:
-            "radial-gradient(circle, rgba(139,111,58,.45) 1.5px, transparent 1.5px)",
-          backgroundSize: "18px 18px",
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-        }}
-      />
     </div>
   );
 }
