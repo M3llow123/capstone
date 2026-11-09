@@ -465,13 +465,14 @@ function ImageGraphHover({ src, regionName }: { src: string; regionName: string 
 /**
  * Summary text that shrinks until it fits inside its box, so it is never cut off.
  *
- * The size is stored as a percentage of the report's width (cqw units), not in pixels.
- * The box itself scales with the page width, so when the page is printed / saved as a PDF
- * (a different width than on screen) the text scales with it and still fits.
+ * The size is stored as a percentage of the report's width (cqw units), not in pixels,
+ * so when the page is printed / saved as a PDF at a different width the text scales
+ * together with its box. The fit is re-checked every time the box changes size (for
+ * example when the map image finishes loading), not just once at the start.
  */
 function SummaryBox({ paragraphs, style }: { paragraphs: string[]; style: React.CSSProperties }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pct, setPct] = useState(1.7); // font size as % of the report width
+  const [fs, setFs] = useState("1.6cqw");
   const key = paragraphs.join("\u0001");
 
   useLayoutEffect(() => {
@@ -479,11 +480,14 @@ function SummaryBox({ paragraphs, style }: { paragraphs: string[]; style: React.
     const wrapper = el?.parentElement;
     if (!el || !wrapper) return;
 
+    const supportsCq = typeof CSS !== "undefined" && !!CSS.supports && CSS.supports("width", "1cqw");
+    let raf = 0;
+
     const fit = () => {
       const width = wrapper.clientWidth;
-      if (!width) return;
-      const max = width * 0.017;   // about 13px on a 780px-wide report
-      const min = width * 0.009;   // about 7px
+      if (!width || !el.clientHeight) return;
+      const max = width * 0.017; // about 13px on a 780px-wide report
+      const min = width * 0.009; // about 7px
       const step = width * 0.0003;
       let size = max;
       el.style.fontSize = `${size}px`;
@@ -491,18 +495,34 @@ function SummaryBox({ paragraphs, style }: { paragraphs: string[]; style: React.
         size -= step;
         el.style.fontSize = `${size}px`;
       }
-      el.style.fontSize = "";
-      // 4% safety margin: printing wraps lines a little differently than the screen does.
-      setPct(((size / width) * 100) * 0.96);
+      // 5% safety margin: printing wraps lines a little differently than the screen does.
+      const next = supportsCq ? `${(size / width) * 100 * 0.95}cqw` : `${size * 0.95}px`;
+      el.style.fontSize = next;
+      setFs(next);
     };
 
     fit();
-    // Re-fit once fonts are ready (text metrics can change after they load).
+
+    // Re-fit whenever the box changes size (image loaded, window resized, ...).
+    const ro = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(() => {
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(fit);
+        })
+      : null;
+    ro?.observe(el);
+    ro?.observe(wrapper);
+    // ...and once fonts are ready (text metrics can change after they load).
     void document.fonts?.ready.then(fit);
+
+    return () => {
+      ro?.disconnect();
+      cancelAnimationFrame(raf);
+    };
   }, [key]);
 
   return (
-    <div ref={ref} style={{ ...style, fontSize: `${pct}cqw` }}>
+    <div ref={ref} style={{ ...style, fontSize: fs }}>
       {paragraphs.map((p, i) => (
         <p key={i} style={{ margin: "0 0 0.9em" }}>{p.trim()}</p>
       ))}
