@@ -635,8 +635,20 @@ function RegionReportZoomed({
 }) {
   const docRef = useRef<HTMLDivElement>(null);
 
+  // The A4 page is 794px wide. On a phone the lightbox is much narrower, which used to force
+  // sideways panning (and the toolbar slid out of view with the page). Instead the whole page
+  // is shrunk to fit the screen width, so it only scrolls up and down.
+  const [avail, setAvail] = useState(794);
+  useEffect(() => {
+    const update = () => setAvail(Math.max(280, Math.min(794, window.innerWidth - 48)));
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  const narrow = avail < 600;
+
   return (
-    <div>
+    <div style={{ width: avail }}>
       <RegionReportActions
         regionName={regionName}
         summary={summary}
@@ -648,11 +660,13 @@ function RegionReportZoomed({
           zIndex: 5,
           background: "#fff",
           borderBottom: "1px solid #e2e8f0",
-          padding: "8px 14px",
+          // leave room on the right for the lightbox's close (X) button on phones
+          padding: narrow ? "8px 52px 8px 10px" : "8px 14px",
           boxShadow: "0 1px 4px rgba(0,0,0,.08)",
         }}
       />
-      <div ref={docRef}>
+      {/* Download PDF reads this node's innerHTML, so the zoom below never reaches the PDF. */}
+      <div ref={docRef} style={{ width: 794, zoom: avail / 794 } as CSSProperties}>
         <RegionReportDocument regionName={regionName} summary={summary} month={month} mapImage={mapImage} chart={chart} />
       </div>
     </div>
