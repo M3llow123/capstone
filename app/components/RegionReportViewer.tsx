@@ -737,7 +737,7 @@ export default function RegionReportPanel({
           />
         }
       >
-        <div ref={previewRef} style={{ width: 794, zoom: scale } as CSSProperties}>
+        <div ref={previewRef} style={{ width: 794, zoom: scale, margin: "0 auto" } as CSSProperties}>
           <RegionReportDocument regionName={regionName} summary={shown} month={month} mapImage={mapImage} chart={chart} />
         </div>
       </ZoomableBlock>

@@ -33,6 +33,11 @@ import {
 import RegionReportPanel from "../components/RegionReportViewer";
 import ZoomableImage from "../components/ZoomableImage";
 
+// Phone layout. Also applies to a touch phone in "Desktop site" mode (viewport ~980px wide),
+// otherwise the 620px region panel squeezes the page content into a ~130px column.
+const PHONE_LAYOUT_QUERY =
+  "(max-width: 760px), (hover: none) and (pointer: coarse) and (max-width: 1100px)";
+
 const TABS = [
   "Cover Page",
   "About this Report",
@@ -178,7 +183,7 @@ function ReportPageInner() {
   // look like nothing happened).
   const scrollToRegionPanel = () => {
     if (typeof window === "undefined") return;
-    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    if (!window.matchMedia(PHONE_LAYOUT_QUERY).matches) return;
     window.setTimeout(() => {
       document
         .querySelector(
@@ -369,7 +374,7 @@ function ReportPageInner() {
           }
         }
 
-        @media (max-width: 760px) {
+        @media (max-width: 760px), (hover: none) and (pointer: coarse) and (max-width: 1100px) {
           html,
           body {
             overflow: hidden;
@@ -857,7 +862,7 @@ function ReportPageInner() {
               lineHeight: 1.25,
             }}
           >
-            Philippine Atmospheric, Geophysical and
+            Philippine Atmospheric, Geophysical and{" "}
             <br />
             Astronomical Services Administration
           </div>
