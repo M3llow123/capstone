@@ -260,26 +260,31 @@ const cornStore = createImageStore("corn", "CORN CROP STAGE");
 export const saveCornImage = cornStore.save;
 export const getCornImage = cornStore.get;
 export const onCornImageChanged = cornStore.onChange;
+export const deleteCornImage = cornStore.remove;
 
 const riceStore = createImageStore("rice", "RICE CROP STAGE");
 export const saveRiceImage = riceStore.save;
 export const getRiceImage = riceStore.get;
 export const onRiceImageChanged = riceStore.onChange;
+export const deleteRiceImage = riceStore.remove;
 
 const rainfallStore = createImageStore("rainfall", "MONTHLY RAINFALL");
 export const saveRainfallImage = rainfallStore.save;
 export const getRainfallImage = rainfallStore.get;
 export const onRainfallImageChanged = rainfallStore.onChange;
+export const deleteRainfallImage = rainfallStore.remove;
 
 const cycloneStore = createImageStore("cyclone", "TROPICAL CYCLONE");
 export const saveCycloneImage = cycloneStore.save;
 export const getCycloneImage = cycloneStore.get;
 export const onCycloneImageChanged = cycloneStore.onChange;
+export const deleteCycloneImage = cycloneStore.remove;
 
 const droughtStore = createImageStore("drought", "CROP CONDITION AND DROUGHT INDICATOR");
 export const saveDroughtImage = droughtStore.save;
 export const getDroughtImage = droughtStore.get;
 export const onDroughtImageChanged = droughtStore.onChange;
+export const deleteDroughtImage = droughtStore.remove;
 
 const coverStore = createImageStore("cover", "COVER PAGE");
 export const saveCoverImage = coverStore.save;
