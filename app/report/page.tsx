@@ -1190,7 +1190,7 @@ function ReportPageInner() {
                       style={{
                         display: "block",
                         width: "100%",
-                        textAlign: "center",
+                        textAlign: "left",
                         border: "none",
                         borderTop:
                           "1px solid rgba(255,255,255,.15)",
@@ -1311,7 +1311,7 @@ function ReportPageInner() {
                             border: "none",
                             borderBottom: "1px solid rgba(28,43,58,.12)",
                             padding: "9px 14px",
-                            textAlign: "center",
+                            textAlign: "left",
                             cursor: "pointer",
                             fontFamily: "inherit",
                             fontSize: 12,
