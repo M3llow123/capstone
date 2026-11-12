@@ -1229,10 +1229,10 @@ function ReportPageInner() {
                     color: "#fff",
                     fontSize: 13,
                     fontWeight: 600,
-                    padding: "9px 36px",
+                    padding: "9px 36px 9px 14px",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    justifyContent: "flex-start",
                     position: "relative",
                   }}
                 >
@@ -1279,8 +1279,7 @@ function ReportPageInner() {
                       style={{
                         position: "absolute",
                         top: "100%",
-                        left: "50%",
-                        transform: "translateX(-50%)",
+                        left: 0,
                         width: 210,
                         background: "#fff",
                         border: "1px solid #ccd4df",
