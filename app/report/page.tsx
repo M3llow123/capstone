@@ -597,10 +597,6 @@ function ReportPageInner() {
             padding-right: 12px !important;
           }
 
-          .report-content-wrap {
-            padding-right: 0 !important;
-          }
-
           .report-tab-content {
             padding: 12px !important;
             max-width: 100% !important;
@@ -1492,17 +1488,6 @@ function ReportPageInner() {
             Climate Impact Assessment for Philippine Agriculture
           </div>
 
-          {/* Centers the tabs + content in the space left of the floating panel,
-              so it stays centered on any screen size. */}
-          <div
-            className="report-content-wrap"
-            style={{ paddingRight: reservedWidth ? reservedWidth + 16 : 0 }}
-          >
-          <div
-            className="report-content-inner"
-            style={{ maxWidth: 940, width: "100%", margin: "0 auto" }}
-          >
-
           {/* =================================
               TABS
           ================================== */}
@@ -1549,6 +1534,9 @@ function ReportPageInner() {
             className="report-tab-content"
             style={{
               padding: "24px",
+              maxWidth: reservedWidth
+                ? `min(940px, calc(100% - ${reservedWidth + 16}px))`
+                : 940,
               width: "100%",
             }}
           >
@@ -1568,9 +1556,6 @@ function ReportPageInner() {
             {activeTab === "Overview" && (
               <OverviewSection />
             )}
-          </div>
-
-          </div>
           </div>
 
           <ReportFooter />
