@@ -1922,51 +1922,16 @@ function CoverPage(_props: { now: Date | null }) {
 
   /* =======================================
      NOTHING UPLOADED YET
-     (no default design is shown any more)
+     Default card with a title and description, same style as
+     About this Report and Preface.
   ======================================== */
 
   return (
-    <div
-      role="status"
-      style={{
-        width: "100%",
-        maxWidth: 760,
-        minHeight: 260,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        background: "#fff",
-        border: "1px dashed #c3ccd6",
-        borderRadius: 4,
-        padding: 32,
-        textAlign: "center",
-        color: "#888",
-        fontSize: 14,
-        boxSizing: "border-box",
-      }}
-    >
-      <svg
-        width="40"
-        height="40"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#aab4c0"
-        strokeWidth="1.6"
-        aria-hidden="true"
-      >
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <path d="M21 15l-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      <div style={{ fontWeight: 600, color: "#666" }}>
-        No cover page has been uploaded yet.
-      </div>
-      <div>
-        Add one from the CMS (Impact Assessment → Cover Page) and it will
-        appear here.
-      </div>
+    <div style={{ width: "100%", maxWidth: 760 }}>
+      <PlaceholderSection
+        title="Cover Page"
+        text="Climate Impact Assessment for Philippine Agriculture is a monthly report of DOST-PAGASA on climate conditions and their expected impact on rice and corn production."
+      />
     </div>
   );
 }
@@ -1995,22 +1960,10 @@ function OverviewSection() {
 
   if (!overview || !overview.text) {
     return (
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #dde3ea",
-          borderRadius: 4,
-          padding: 32,
-          textAlign: "center",
-          color: "#888",
-          fontSize: 14,
-        }}
-      >
-        No Overview content has been added yet.
-        <br />
-        Add it from the CMS (Impact Assessment
-        → Overview) and it will appear here.
-      </div>
+      <PlaceholderSection
+        title="Overview"
+        text="This overview summarizes PAGASA's monthly assessment of climate conditions and their expected impact on rice and corn production in the Philippines."
+      />
     );
   }
 
