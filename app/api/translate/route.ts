@@ -54,8 +54,8 @@ export async function POST(req: NextRequest) {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      // A stronger model than Haiku: much better at natural, idiomatic Filipino.
-      model: "claude-sonnet-5-5",
+      // Haiku: same model as the chat route (fast and cheap for translation).
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 2000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: text }],
