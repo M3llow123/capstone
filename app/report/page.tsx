@@ -120,19 +120,14 @@ const REGIONS_LIST: { id: string; name: string }[] = [
   { id: "16", name: "BARMM" },
 ];
 
-// Shared position for the floating panels (Regions list, region report,
-// category image). They are pinned to the right edge of the main area, and
-// the page content is given matching right-hand space while a panel is open
+// Floating panels (Regions list, region report, category image) sit on the right of the
+// main area. The page content is given matching right-hand space while a panel is open
 // (see `reservedWidth` below), so the panel never covers the content.
-//  - right: 12 matches the 12px side margin of the blue title bar, so the panel's
-//    right edge lines up with the bar's right edge.
 //  - top: 134 matches where the page content (cover image, etc.) starts, so the
 //    panel's top edge lines up with the top of the content on the left.
-const FLOATING_PANEL_POSITION = {
-  position: "absolute",
-  top: 134,
-  right: 12,
-} as const;
+//  - right: the panel is centered in the free space between the page content and the
+//    right edge of the screen (never closer than 12px to the edge), so it stays
+//    centered on small and large screens alike. See `panelPosition` in ReportPageInner.
 
 // Never wider than the main area on small screens.
 const FLOATING_PANEL_FIT = {
@@ -297,6 +292,17 @@ function ReportPageInner() {
       : selectedCategory
         ? 452
         : 0;
+
+  // Right edge of the page content: 24px padding + the cover image / text column.
+  const contentMaxWidth = activeTab === "Cover Page" ? 760 : 892;
+  const panelPosition = (panelWidth: number) =>
+    ({
+      position: "absolute",
+      top: 134,
+      right: `max(12px, calc((100% - 24px - min(${contentMaxWidth}px, 100% - ${
+        reservedWidth + 64
+      }px) - ${panelWidth}px) / 2))`,
+    }) as const;
 
   return (
     <div
@@ -1105,7 +1111,7 @@ function ReportPageInner() {
             <div
               className="report-floating-panel report-regions-picker"
               style={{
-                ...FLOATING_PANEL_POSITION,
+                ...panelPosition(210),
                 width: 210,
                 zIndex: 20,
                 boxShadow:
@@ -1196,7 +1202,7 @@ function ReportPageInner() {
               <div
               className="report-floating-panel report-region-panel"
               style={{
-                  ...FLOATING_PANEL_POSITION,
+                  ...panelPosition(620),
                   width: 620,
                   ...FLOATING_PANEL_FIT,
                   zIndex: 15,
@@ -1377,7 +1383,7 @@ function ReportPageInner() {
             <div
               className="report-floating-panel report-category-panel"
               style={{
-                ...FLOATING_PANEL_POSITION,
+                ...panelPosition(452),
                 width: 452,
                 ...FLOATING_PANEL_FIT,
                 zIndex: 15,
