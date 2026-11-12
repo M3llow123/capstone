@@ -159,8 +159,9 @@ function ReportPageInner() {
 
   const [govMenuOpen, setGovMenuOpen] = useState(false);
 
+  // Open on first load so the right side is never empty.
   const [regionsPanelOpen, setRegionsPanelOpen] =
-    useState(false);
+    useState(true);
 
   const [regionsListOpen, setRegionsListOpen] =
     useState(false);
@@ -194,6 +195,15 @@ function ReportPageInner() {
   };
 
   const [now, setNow] = useState<Date | null>(null);
+
+  // On desktop the Regions list is already expanded on first load. On phones the panel sits
+  // below the cover page, so keep the list collapsed there.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (!window.matchMedia(PHONE_LAYOUT_QUERY).matches) setRegionsListOpen(true);
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, []);
 
   /* =========================================
      SELECTED REGION REPORT
@@ -585,6 +595,10 @@ function ReportPageInner() {
           .report-tabs {
             padding-left: 12px !important;
             padding-right: 12px !important;
+          }
+
+          .report-content-wrap {
+            padding-right: 0 !important;
           }
 
           .report-tab-content {
@@ -1118,8 +1132,8 @@ function ReportPageInner() {
                   padding: "9px 14px",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent:
-                    "space-between",
+                  justifyContent: "center",
+                  gap: 6,
                   width: "100%",
                   border: "none",
                   cursor: "pointer",
@@ -1159,7 +1173,7 @@ function ReportPageInner() {
                       style={{
                         display: "block",
                         width: "100%",
-                        textAlign: "left",
+                        textAlign: "center",
                         border: "none",
                         borderTop:
                           "1px solid rgba(255,255,255,.15)",
@@ -1206,11 +1220,10 @@ function ReportPageInner() {
                     color: "#fff",
                     fontSize: 13,
                     fontWeight: 600,
-                    padding: "9px 14px",
+                    padding: "9px 36px",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent:
-                      "space-between",
+                    justifyContent: "center",
                     position: "relative",
                   }}
                 >
@@ -1257,7 +1270,8 @@ function ReportPageInner() {
                       style={{
                         position: "absolute",
                         top: "100%",
-                        left: 0,
+                        left: "50%",
+                        transform: "translateX(-50%)",
                         width: 210,
                         background: "#fff",
                         border: "1px solid #ccd4df",
@@ -1281,7 +1295,7 @@ function ReportPageInner() {
                             border: "none",
                             borderBottom: "1px solid rgba(28,43,58,.12)",
                             padding: "9px 14px",
-                            textAlign: "left",
+                            textAlign: "center",
                             cursor: "pointer",
                             fontFamily: "inherit",
                             fontSize: 12,
@@ -1299,6 +1313,10 @@ function ReportPageInner() {
                     }
                     aria-label="Close"
                     style={{
+                      position: "absolute",
+                      right: 14,
+                      top: "50%",
+                      transform: "translateY(-50%)",
                       background: "none",
                       border: "none",
                       color: "#c7d2dc",
@@ -1380,10 +1398,12 @@ function ReportPageInner() {
                   color: "#fff",
                   fontSize: 13,
                   fontWeight: 600,
-                  padding: "9px 14px",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  position: "relative",
+                  padding: "9px 36px",
                   gap: 10,
                 }}
               >
@@ -1393,6 +1413,10 @@ function ReportPageInner() {
                   onClick={() => setSelectedCategory(null)}
                   aria-label="Close"
                   style={{
+                    position: "absolute",
+                    right: 14,
+                    top: "50%",
+                    transform: "translateY(-50%)",
                     background: "none",
                     border: "none",
                     color: "#c7d2dc",
@@ -1468,6 +1492,17 @@ function ReportPageInner() {
             Climate Impact Assessment for Philippine Agriculture
           </div>
 
+          {/* Centers the tabs + content in the space left of the floating panel,
+              so it stays centered on any screen size. */}
+          <div
+            className="report-content-wrap"
+            style={{ paddingRight: reservedWidth ? reservedWidth + 16 : 0 }}
+          >
+          <div
+            className="report-content-inner"
+            style={{ maxWidth: 940, width: "100%", margin: "0 auto" }}
+          >
+
           {/* =================================
               TABS
           ================================== */}
@@ -1514,9 +1549,6 @@ function ReportPageInner() {
             className="report-tab-content"
             style={{
               padding: "24px",
-              maxWidth: reservedWidth
-                ? `min(940px, calc(100% - ${reservedWidth + 16}px))`
-                : 940,
               width: "100%",
             }}
           >
@@ -1536,6 +1568,9 @@ function ReportPageInner() {
             {activeTab === "Overview" && (
               <OverviewSection />
             )}
+          </div>
+
+          </div>
           </div>
 
           <ReportFooter />
