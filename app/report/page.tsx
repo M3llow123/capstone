@@ -130,9 +130,11 @@ const REGIONS_LIST: { id: string; name: string }[] = [
 //    centered on small and large screens alike. See `panelPosition` in ReportPageInner.
 
 // Never wider than the main area on small screens.
-// Width of the Regions button/panel AND the region report panel. They share this one
-// value so they are always exactly the same length. Change it here to resize both.
-const WIDE_PANEL_WIDTH = 620;
+// Panel widths. The region report is the widest; the Regions button/list and the category
+// panels (Corn, Rice, Crop Condition, ...) share one value so they are always the same length.
+// Change a value here to resize every panel that uses it.
+const WIDE_PANEL_WIDTH = 620; // region report
+const MEDIUM_PANEL_WIDTH = 452; // Regions button/list + category panels
 
 const FLOATING_PANEL_FIT = {
   maxWidth: "calc(100% - 24px)",
@@ -290,11 +292,11 @@ function ReportPageInner() {
   // Width of whichever floating panel is currently showing, so the page
   // content can make room for it instead of sitting underneath it.
   const reservedWidth = regionsPanelOpen
-    ? WIDE_PANEL_WIDTH
+    ? MEDIUM_PANEL_WIDTH
     : selectedRegionId
       ? WIDE_PANEL_WIDTH
       : selectedCategory
-        ? 452
+        ? MEDIUM_PANEL_WIDTH
         : 0;
 
   // Right edge of the page content: 24px padding + the cover image / text column.
@@ -1115,8 +1117,8 @@ function ReportPageInner() {
             <div
               className="report-floating-panel report-regions-picker"
               style={{
-                ...panelPosition(WIDE_PANEL_WIDTH),
-                width: WIDE_PANEL_WIDTH,
+                ...panelPosition(MEDIUM_PANEL_WIDTH),
+                width: MEDIUM_PANEL_WIDTH,
                 ...FLOATING_PANEL_FIT,
                 zIndex: 20,
                 boxShadow:
@@ -1388,8 +1390,8 @@ function ReportPageInner() {
             <div
               className="report-floating-panel report-category-panel"
               style={{
-                ...panelPosition(452),
-                width: 452,
+                ...panelPosition(MEDIUM_PANEL_WIDTH),
+                width: MEDIUM_PANEL_WIDTH,
                 ...FLOATING_PANEL_FIT,
                 zIndex: 15,
                 boxShadow: "0 6px 18px rgba(0,0,0,.18)",
