@@ -1991,6 +1991,4 @@ function OverviewSection() {
       )}
     </div>
   );
-}git add app/report/page.tsx app/components/RegionReportViewer.tsx
-git commit -m "fix(report): improve Regions panel and mobile layout"
-git push
+}
