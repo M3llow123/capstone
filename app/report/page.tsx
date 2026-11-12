@@ -130,6 +130,10 @@ const REGIONS_LIST: { id: string; name: string }[] = [
 //    centered on small and large screens alike. See `panelPosition` in ReportPageInner.
 
 // Never wider than the main area on small screens.
+// Width of the Regions button/panel AND the region report panel. They share this one
+// value so they are always exactly the same length. Change it here to resize both.
+const WIDE_PANEL_WIDTH = 620;
+
 const FLOATING_PANEL_FIT = {
   maxWidth: "calc(100% - 24px)",
 } as const;
@@ -286,9 +290,9 @@ function ReportPageInner() {
   // Width of whichever floating panel is currently showing, so the page
   // content can make room for it instead of sitting underneath it.
   const reservedWidth = regionsPanelOpen
-    ? 210
+    ? WIDE_PANEL_WIDTH
     : selectedRegionId
-      ? 620
+      ? WIDE_PANEL_WIDTH
       : selectedCategory
         ? 452
         : 0;
@@ -1111,8 +1115,9 @@ function ReportPageInner() {
             <div
               className="report-floating-panel report-regions-picker"
               style={{
-                ...panelPosition(210),
-                width: 210,
+                ...panelPosition(WIDE_PANEL_WIDTH),
+                width: WIDE_PANEL_WIDTH,
+                ...FLOATING_PANEL_FIT,
                 zIndex: 20,
                 boxShadow:
                   "0 6px 18px rgba(0,0,0,.18)",
@@ -1202,8 +1207,8 @@ function ReportPageInner() {
               <div
               className="report-floating-panel report-region-panel"
               style={{
-                  ...panelPosition(620),
-                  width: 620,
+                  ...panelPosition(WIDE_PANEL_WIDTH),
+                  width: WIDE_PANEL_WIDTH,
                   ...FLOATING_PANEL_FIT,
                   zIndex: 15,
                   boxShadow:
@@ -1986,4 +1991,6 @@ function OverviewSection() {
       )}
     </div>
   );
-}
+}git add app/report/page.tsx app/components/RegionReportViewer.tsx
+git commit -m "fix(report): improve Regions panel and mobile layout"
+git push
