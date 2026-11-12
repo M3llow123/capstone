@@ -309,19 +309,8 @@ export default function PagasaChat() {
             <div key={label} className={`side-link${activeNav === label ? " active" : ""}`} onClick={() => handleNavClick(label)}>{label}</div>
           ))}
 
-          {/* AI Tools */}
+          {/* Audit Log */}
           <AuditLogNav />
-          <div style={{ marginTop: 8, borderTop: "1px solid #eee", paddingTop: 8 }}>
-            <div style={{ padding: "4px 14px 6px", fontSize: 10, fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: ".06em" }}>AI Tools</div>
-            <div
-              className={`side-link${activeNav === "PAGASA AI" ? " active" : ""}`}
-              style={{ paddingLeft: 16, display: "flex", alignItems: "center", gap: 8 }}
-              onClick={() => setActiveNav("PAGASA AI")}
-            >
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4caf50", flexShrink: 0 }} />
-              PAGASA AI
-            </div>
-          </div>
         </nav>
 
         {/* User footer */}
