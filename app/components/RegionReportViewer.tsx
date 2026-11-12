@@ -27,7 +27,7 @@ import {
   useSyncExternalStore,
   type CSSProperties,
 } from "react";
-import RegionReportDocument, { getSummaryText } from "./RegionReportDocument";
+import RegionReportDocument, { cleanSummary, getSummaryText, splitParagraphs } from "./RegionReportDocument";
 import { ZoomableBlock } from "./ZoomableImage";
 import type { RainfallChartData } from "../lib/rainfallChart";
 
@@ -695,12 +695,18 @@ export default function RegionReportPanel({
 
   // Fit the A4 preview to whatever width the panel has (a fixed zoom cut off the right side).
   const [scale, setScale] = useState(0.72);
+  // Narrow panel (phones): the A4 preview is shrunk too far to read, so a readable copy of the
+  // Regional Summary is shown above it.
+  const [narrow, setNarrow] = useState(false);
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
     const update = () => {
       const w = el.clientWidth;
-      if (w > 0) setScale(Math.max(0.3, Math.min(1, w / 794)));
+      if (w > 0) {
+        setScale(Math.max(0.3, Math.min(1, w / 794)));
+        setNarrow(w < 600);
+      }
     };
     update();
     const ro = new ResizeObserver(update);
@@ -723,6 +729,29 @@ export default function RegionReportPanel({
         getNode={() => previewRef.current}
         style={{ position: "sticky", top: 0, zIndex: 5, background: "#fff", padding: "6px 0 10px" }}
       />
+
+      {narrow && shown.trim() && (
+        <div
+          style={{
+            margin: "4px 0 12px",
+            padding: "12px 14px",
+            border: "1px solid #d5dbe5",
+            borderRadius: 4,
+            background: "#fff",
+            color: "#111",
+            fontFamily: "Arial, Helvetica, sans-serif",
+          }}
+        >
+          <div style={{ fontSize: 16, fontWeight: 700, textAlign: "center", marginBottom: 8 }}>
+            Regional Summary
+          </div>
+          {splitParagraphs(cleanSummary(shown)).map((p, i) => (
+            <p key={i} style={{ fontSize: 15, lineHeight: 1.6, margin: "0 0 10px", textAlign: "left" }}>
+              {p.trim()}
+            </p>
+          ))}
+        </div>
+      )}
 
       <ZoomableBlock
         label="Click to enlarge"

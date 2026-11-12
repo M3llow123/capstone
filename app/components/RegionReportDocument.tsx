@@ -47,7 +47,7 @@ export function getSummaryText(summary: string): string {
 }
 
 /** Splits on blank lines; if there are none, splits at the sentence end nearest the middle (never mid-word). */
-function splitParagraphs(summary: string): string[] {
+export function splitParagraphs(summary: string): string[] {
   const byBlank = summary.split(/\n\n+/).filter(Boolean);
   if (byBlank.length > 1) return byBlank;
 
@@ -486,17 +486,24 @@ function SummaryBox({ paragraphs, style }: { paragraphs: string[]; style: React.
     const fit = () => {
       const width = wrapper.clientWidth;
       if (!width || !el.clientHeight) return;
-      const max = width * 0.017; // about 13px on a 780px-wide report
-      const min = width * 0.009; // about 7px
-      const step = width * 0.0003;
-      let size = max;
-      el.style.fontSize = `${size}px`;
-      while (size > min && el.scrollHeight > el.clientHeight + 1) {
-        size -= step;
-        el.style.fontSize = `${size}px`;
+      // Binary-search the largest font size whose text still fits inside the box, so the
+      // summary fills the whole frame (short summaries get big text, long ones get smaller text).
+      let lo = width * 0.009; // about 7px on a 780px-wide report
+      let hi = width * 0.05;  // about 39px
+      el.style.fontSize = `${hi}px`;
+      if (el.scrollHeight <= el.clientHeight + 1) {
+        lo = hi;
+      } else {
+        for (let i = 0; i < 14; i++) {
+          const mid = (lo + hi) / 2;
+          el.style.fontSize = `${mid}px`;
+          if (el.scrollHeight <= el.clientHeight + 1) lo = mid;
+          else hi = mid;
+        }
       }
-      // 5% safety margin: printing wraps lines a little differently than the screen does.
-      const next = supportsCq ? `${(size / width) * 100 * 0.95}cqw` : `${size * 0.95}px`;
+      const size = lo;
+      // 3% safety margin: printing wraps lines a little differently than the screen does.
+      const next = supportsCq ? `${(size / width) * 100 * 0.97}cqw` : `${size * 0.97}px`;
       el.style.fontSize = next;
       setFs(next);
     };
@@ -524,7 +531,7 @@ function SummaryBox({ paragraphs, style }: { paragraphs: string[]; style: React.
   return (
     <div ref={ref} style={{ ...style, fontSize: fs }}>
       {paragraphs.map((p, i) => (
-        <p key={i} style={{ margin: "0 0 0.9em" }}>{p.trim()}</p>
+        <p key={i} style={{ margin: i === paragraphs.length - 1 ? 0 : "0 0 0.9em" }}>{p.trim()}</p>
       ))}
     </div>
   );
