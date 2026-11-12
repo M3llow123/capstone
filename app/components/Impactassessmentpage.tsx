@@ -42,6 +42,15 @@ const regions: Region[] = [
 
 const GROUPS: Group[] = ["Luzon", "Visayas", "Mindanao"];
 
+// "2026-11-12 10:57:45" in the viewer's local time (same format the list used before)
+function formatUpdated(iso: string | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 // ── Component ──────────────────────────────────────────────────────────
 export default function ImpactAssessmentPage({ username = "User" }: { username?: string }) {
   const router = useRouter();
@@ -62,8 +71,14 @@ export default function ImpactAssessmentPage({ username = "User" }: { username?:
 
   // Regions that already have a saved report (only those have a summary to edit)
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  // When each saved report was last updated / generated (region id -> ISO timestamp)
+  const [savedAt, setSavedAt] = useState<Record<string, string>>({});
   useEffect(() => {
-    const refresh = () => setSavedIds(new Set(getAllRegionReports().map(r => r.id)));
+    const refresh = () => {
+      const reports = getAllRegionReports();
+      setSavedIds(new Set(reports.map(r => r.id)));
+      setSavedAt(Object.fromEntries(reports.map(r => [r.id, r.updatedAt])));
+    };
     refresh();
     return onRegionReportsChanged(refresh);
   }, []);
@@ -257,7 +272,9 @@ export default function ImpactAssessmentPage({ username = "User" }: { username?:
                         <div key={r.id} className="region-card">
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 14, fontWeight: 600, color: "#222", lineHeight: 1.25 }}>{r.name}</div>
-                            <div style={{ fontSize: 11, color: "#aaa", marginTop: 3 }}>{r.date}</div>
+                            <div style={{ fontSize: 11, color: "#aaa", marginTop: 3 }}>
+                              {savedAt[String(r.id)] ? `Last updated: ${formatUpdated(savedAt[String(r.id)])}` : "Not generated yet"}
+                            </div>
                           </div>
                           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                             <button
