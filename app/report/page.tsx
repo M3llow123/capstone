@@ -101,6 +101,9 @@ const CATEGORY_STORE: Record<
   "Crop Condition and Drought Indicator": { get: getDroughtImage, onChange: onDroughtImageChanged },
 };
 
+// Category panel that is open by default when the report page loads.
+const DEFAULT_CATEGORY = "Corn Crop Stage and Water Sufficiency";
+
 const REGIONS_LIST: { id: string; name: string }[] = [
   { id: "1", name: "Region 1 Ilocos Region" },
   { id: "2", name: "Region 2 Cagayan Valley" },
@@ -160,9 +163,10 @@ function ReportPageInner() {
 
   const [govMenuOpen, setGovMenuOpen] = useState(false);
 
-  // Open on first load so the right side is never empty.
+  // On first load the right side shows the Corn Crop Stage panel (see selectedCategory below),
+  // so the Regions panel starts closed.
   const [regionsPanelOpen, setRegionsPanelOpen] =
-    useState(true);
+    useState(false);
 
   const [regionsListOpen, setRegionsListOpen] =
     useState(false);
@@ -173,8 +177,9 @@ function ReportPageInner() {
   const [selectedRegionReport, setSelectedRegionReport] =
     useState<RegionReport | null>(null);
 
+  // Default panel shown on the right when the report page first opens.
   const [selectedCategory, setSelectedCategory] =
-    useState<string | null>(null);
+    useState<string | null>(DEFAULT_CATEGORY);
 
   const [selectedCategoryImage, setSelectedCategoryImage] =
     useState<string | null>(null);
@@ -196,15 +201,6 @@ function ReportPageInner() {
   };
 
   const [now, setNow] = useState<Date | null>(null);
-
-  // On desktop the Regions list is already expanded on first load. On phones the panel sits
-  // below the cover page, so keep the list collapsed there.
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      if (!window.matchMedia(PHONE_LAYOUT_QUERY).matches) setRegionsListOpen(true);
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, []);
 
   /* =========================================
      SELECTED REGION REPORT
