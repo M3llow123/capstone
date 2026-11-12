@@ -104,6 +104,52 @@ const CATEGORY_STORE: Record<
 // Category panel that is open by default when the report page loads.
 const DEFAULT_CATEGORY = "Corn Crop Stage and Water Sufficiency";
 
+// The current view lives in the URL (?tab=...&panel=...), so refreshing the page keeps you where you
+// were (same tab, same region / category panel). Values of `panel`:
+//   regions            -> the Regions list is open
+//   region:<id>        -> a region report is open
+//   cat:<category>     -> a category panel (Corn, Rice, ...) is open
+//   none               -> no panel open
+// No `panel` at all means the default panel (DEFAULT_CATEGORY).
+type PanelState = {
+  regionsPanelOpen: boolean;
+  selectedRegionId: string | null;
+  selectedCategory: string | null;
+};
+
+function parsePanel(value: string | null | undefined): PanelState {
+  const fallback: PanelState = {
+    regionsPanelOpen: false,
+    selectedRegionId: null,
+    selectedCategory: DEFAULT_CATEGORY,
+  };
+  if (!value) return fallback;
+  if (value === "none") return { regionsPanelOpen: false, selectedRegionId: null, selectedCategory: null };
+  if (value === "regions") return { regionsPanelOpen: true, selectedRegionId: null, selectedCategory: null };
+  if (value.startsWith("region:")) {
+    const id = value.slice("region:".length);
+    if (REGIONS_LIST.some((r) => r.id === id)) {
+      return { regionsPanelOpen: false, selectedRegionId: id, selectedCategory: null };
+    }
+  }
+  if (value.startsWith("cat:")) {
+    const label = value.slice("cat:".length);
+    if (label in CATEGORY_STORE) {
+      return { regionsPanelOpen: false, selectedRegionId: null, selectedCategory: label };
+    }
+  }
+  return fallback;
+}
+
+function panelToParam(state: PanelState): string | null {
+  if (state.regionsPanelOpen) return "regions";
+  if (state.selectedRegionId) return `region:${state.selectedRegionId}`;
+  if (state.selectedCategory) {
+    return state.selectedCategory === DEFAULT_CATEGORY ? null : `cat:${state.selectedCategory}`;
+  }
+  return "none";
+}
+
 const REGIONS_LIST: { id: string; name: string }[] = [
   { id: "1", name: "Region 1 Ilocos Region" },
   { id: "2", name: "Region 2 Cagayan Valley" },
@@ -163,23 +209,42 @@ function ReportPageInner() {
 
   const [govMenuOpen, setGovMenuOpen] = useState(false);
 
-  // On first load the right side shows the Corn Crop Stage panel (see selectedCategory below),
-  // so the Regions panel starts closed.
+  // Which panel is open on the right comes from the URL (?panel=...), so a refresh keeps it.
+  // With no ?panel the Corn Crop Stage panel is shown (DEFAULT_CATEGORY).
+  const [initialPanel] = useState<PanelState>(() =>
+    parsePanel(searchParams?.get("panel"))
+  );
+
   const [regionsPanelOpen, setRegionsPanelOpen] =
-    useState(false);
+    useState(initialPanel.regionsPanelOpen);
 
   const [regionsListOpen, setRegionsListOpen] =
     useState(false);
 
   const [selectedRegionId, setSelectedRegionId] =
-    useState<string | null>(null);
+    useState<string | null>(initialPanel.selectedRegionId);
 
   const [selectedRegionReport, setSelectedRegionReport] =
     useState<RegionReport | null>(null);
 
-  // Default panel shown on the right when the report page first opens.
   const [selectedCategory, setSelectedCategory] =
-    useState<string | null>(DEFAULT_CATEGORY);
+    useState<string | null>(initialPanel.selectedCategory);
+
+  // Keep the URL in sync with what is on screen (no new history entries, no page reload).
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (activeTab === "Cover Page") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", activeTab);
+
+    const panel = panelToParam({ regionsPanelOpen, selectedRegionId, selectedCategory });
+    if (panel) url.searchParams.set("panel", panel);
+    else url.searchParams.delete("panel");
+
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    if (next !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+      window.history.replaceState(window.history.state, "", next);
+    }
+  }, [activeTab, regionsPanelOpen, selectedRegionId, selectedCategory]);
 
   const [selectedCategoryImage, setSelectedCategoryImage] =
     useState<string | null>(null);
