@@ -1137,7 +1137,8 @@ function ReportPageInner() {
                   padding: "9px 14px",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
+                  position: "relative",
                   gap: 6,
                   width: "100%",
                   border: "none",
@@ -1147,11 +1148,22 @@ function ReportPageInner() {
               >
                 Regions
 
-                {regionsListOpen ? (
-                  <ChevronUp size={14} />
-                ) : (
-                  <ChevronDown size={14} />
-                )}
+                {/* Icon stays pinned to the right edge while the word is centered */}
+                <span
+                  style={{
+                    position: "absolute",
+                    right: 14,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    display: "flex",
+                  }}
+                >
+                  {regionsListOpen ? (
+                    <ChevronUp size={14} />
+                  ) : (
+                    <ChevronDown size={14} />
+                  )}
+                </span>
               </button>
 
               {regionsListOpen && (
