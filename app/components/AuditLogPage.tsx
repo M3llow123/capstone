@@ -137,13 +137,6 @@ export default function AuditLogPage({ username = "User" }: { username?: string 
 
           <AuditLogNav />
 
-          <div style={{ marginTop: 8, borderTop: "1px solid #eee", paddingTop: 8 }}>
-            <div style={{ padding: "4px 14px 6px", fontSize: 10, fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: ".06em" }}>AI Tools</div>
-            <div className="side-link" style={{ paddingLeft: 16, display: "flex", alignItems: "center", gap: 8 }} onClick={() => router.push("/chat")}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4caf50", flexShrink: 0 }} />
-              PAGASA AI
-            </div>
-          </div>
         </nav>
 
         <div style={{ padding: "10px 14px", borderTop: "1px solid #eee", fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
