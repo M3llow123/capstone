@@ -341,6 +341,8 @@ function ReportPageInner() {
         .region-item {
           background: #c3c8da;
           color: #1c2b3a;
+          /* Region names are always left-aligned in both region lists */
+          text-align: left !important;
         }
 
         .region-item:hover {
