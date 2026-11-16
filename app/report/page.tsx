@@ -1147,6 +1147,22 @@ function ReportPageInner() {
           >
             Regions
           </button>
+
+          {/* Link to the public Farm Weather and Planting Guide (separate page, /farm) */}
+          <a
+            href="/farm"
+            style={{
+              display: "block",
+              color: "#e4e7ec",
+              fontSize: 13,
+              lineHeight: 1.4,
+              textDecoration: "none",
+              borderTop: "1px solid #5a5f75",
+              paddingTop: 14,
+            }}
+          >
+            Farm Weather and Planting Guide
+          </a>
         </div>
 
         <button

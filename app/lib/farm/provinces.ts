@@ -1,0 +1,42 @@
+// Starting points for the location picker: provincial capitals (approximate).
+// Farmers can also use their device location or type exact farm coordinates, which is more
+// accurate than a capital city. All points are inside the Philippines bounds used by the API.
+export interface Place { name: string; lat: number; lon: number }
+
+export const PROVINCES: Place[] = [
+  { name: "Agusan del Sur", lat: 8.6, lon: 125.91 },
+  { name: "Albay", lat: 13.14, lon: 123.74 },
+  { name: "Batangas", lat: 13.76, lon: 121.06 },
+  { name: "Bohol", lat: 9.65, lon: 123.85 },
+  { name: "Bukidnon", lat: 8.15, lon: 125.13 },
+  { name: "Bulacan", lat: 14.84, lon: 120.81 },
+  { name: "Cagayan", lat: 17.61, lon: 121.73 },
+  { name: "Camarines Sur", lat: 13.58, lon: 123.27 },
+  { name: "Capiz", lat: 11.59, lon: 122.75 },
+  { name: "Cebu", lat: 10.32, lon: 123.89 },
+  { name: "Davao del Sur", lat: 6.75, lon: 125.36 },
+  { name: "Ilocos Norte", lat: 18.2, lon: 120.59 },
+  { name: "Ilocos Sur", lat: 17.57, lon: 120.39 },
+  { name: "Iloilo", lat: 10.72, lon: 122.56 },
+  { name: "Isabela", lat: 17.15, lon: 121.89 },
+  { name: "La Union", lat: 16.62, lon: 120.32 },
+  { name: "Laguna", lat: 14.28, lon: 121.42 },
+  { name: "Lanao del Norte", lat: 8.23, lon: 124.24 },
+  { name: "Leyte", lat: 11.24, lon: 125.0 },
+  { name: "Maguindanao", lat: 7.22, lon: 124.25 },
+  { name: "Metro Manila", lat: 14.6, lon: 121.0 },
+  { name: "Misamis Oriental", lat: 8.48, lon: 124.65 },
+  { name: "Negros Occidental", lat: 10.68, lon: 122.95 },
+  { name: "North Cotabato", lat: 7.01, lon: 125.09 },
+  { name: "Nueva Ecija", lat: 15.54, lon: 121.08 },
+  { name: "Nueva Vizcaya", lat: 16.48, lon: 121.15 },
+  { name: "Occidental Mindoro", lat: 13.22, lon: 120.59 },
+  { name: "Palawan", lat: 9.74, lon: 118.74 },
+  { name: "Pampanga", lat: 15.03, lon: 120.69 },
+  { name: "Pangasinan", lat: 16.02, lon: 120.23 },
+  { name: "Quezon", lat: 13.94, lon: 121.62 },
+  { name: "South Cotabato", lat: 6.5, lon: 124.85 },
+  { name: "Sultan Kudarat", lat: 6.63, lon: 124.6 },
+  { name: "Tarlac", lat: 15.48, lon: 120.6 },
+  { name: "Zamboanga del Sur", lat: 7.83, lon: 123.44 },
+];
