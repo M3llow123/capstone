@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import HistoryApp from "../../components/farm/HistoryApp";
 import PagasaShell from "../../components/PagasaShell";
 
@@ -20,13 +21,27 @@ export default function FarmHistoryPage() {
           a { color: inherit; }
         }
       `}</style>
-      <main className="mx-auto w-full max-w-6xl px-3 py-2">
-        <div className="mb-2 rounded bg-[#3f96cc] px-4 py-2 text-center text-base font-bold leading-snug text-white">
-          Historical Climate Data behind the Planting Calendar
+      <main className="m-3">
+        <div className="mb-6 rounded bg-[#3f96cc] px-4 py-3 text-center text-base font-bold leading-snug text-white">
+          Climate Impact Assessment for Philippine Agriculture
         </div>
-        <p className="mb-2 mt-0 text-sm">
-          <Link href="/farm" className="text-[#003087] underline print:hidden">&larr; Back to Farm Guide</Link>
-        </p>
+        <header className="mb-6 flex flex-col gap-4 border-b border-[#d5dde5] pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[#526477]">PAGASA · Agri-weather</p>
+            <h1 className="m-0 mt-1 text-2xl font-bold leading-tight tracking-tight text-[#172b3a] sm:text-3xl">
+              Historical climate data
+            </h1>
+            <p className="m-0 mt-2 max-w-xl text-sm leading-6 text-[#526477]">
+              Explore the historical weather behind the planting calendar, with source details and downloadable data.
+            </p>
+          </div>
+          <Link
+            href="/farm"
+            className="print:hidden inline-flex min-h-10 items-center justify-center gap-2 self-start border border-[#c6d1dc] bg-white px-3 py-2 text-sm font-semibold text-[#17476b] hover:bg-[#f4f7f9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17476b] sm:self-auto"
+          >
+            <ArrowLeft size={15} aria-hidden /> Farm guide
+          </Link>
+        </header>
         <HistoryApp />
       </main>
     </PagasaShell>

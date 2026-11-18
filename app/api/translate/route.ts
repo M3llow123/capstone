@@ -2,6 +2,34 @@ import { NextRequest, NextResponse } from "next/server";
 
 const MAX_CHARS = 6000;
 
+// Public endpoint (farmers / LGUs do not log in) that spends Anthropic credits, so each client IP
+// gets a modest request budget. Same approach as the farm routes (lib/farm/apiHelpers.ts), but
+// with its own counter and a lower limit because every call is a paid AI request.
+// The limiter is per server instance (best-effort); it is not a substitute for platform limits.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_PER_WINDOW = 20;
+const rateHits = new Map<string, { n: number; reset: number }>();
+
+function clientKey(req: NextRequest): string {
+  return (
+    req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "local"
+  );
+}
+
+function rateLimited(req: NextRequest, now = Date.now()): boolean {
+  const k = clientKey(req);
+  const e = rateHits.get(k);
+  if (!e || e.reset < now) {
+    if (rateHits.size > 5000) rateHits.clear();
+    rateHits.set(k, { n: 1, reset: now + RATE_WINDOW_MS });
+    return false;
+  }
+  e.n++;
+  return e.n > RATE_MAX_PER_WINDOW;
+}
+
 const SYSTEM_PROMPT = `You are a Filipino weather and agriculture reporter at PAGASA. You rewrite English climate impact reports into the Filipino that Filipinos actually speak and hear on TV and radio weather updates and from agricultural technicians: natural, conversational, clear and professional. You are NOT a translator working word for word.
 
 VOICE
@@ -27,6 +55,13 @@ RULES
 - Output only the Filipino text. No preface, no notes, no quotes.`;
 
 export async function POST(req: NextRequest) {
+  if (rateLimited(req)) {
+    return NextResponse.json(
+      { error: "Too many translation requests. Please wait a moment and try again." },
+      { status: 429 }
+    );
+  }
+
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     return NextResponse.json(

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { logAudit } from "../lib/auditStore";
 import AuditLogNav from "./AuditLogNav";
 import { deleteRegionReport, getAllRegionReports, onRegionReportsChanged } from "../lib/reportStore";
 
@@ -84,7 +83,6 @@ export default function ImpactAssessmentPage({ username = "User" }: { username?:
   }, []);
 
   async function handleLogout() {
-    await logAudit("LOGOUT", undefined, username);
     await fetch("/api/logout", { method: "POST" });
     router.push("/");
     router.refresh();

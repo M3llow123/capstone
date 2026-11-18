@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { logAudit } from "../lib/auditStore";
 
 // The "Hi <name>  [Logout]" block for the right side of the CMS top bar.
-// Shows the real logged-in username and logs out (and records it in the audit log).
+// Shows the real logged-in username and logs out (the server records the logout in login_logout_log).
 export default function UserMenu() {
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
@@ -29,11 +28,6 @@ export default function UserMenu() {
   async function handleLogout() {
     if (busy) return;
     setBusy(true);
-    try {
-      await logAudit("LOGOUT", undefined, username ?? "User");
-    } catch {
-      /* never block logging out because of the audit log */
-    }
     await fetch("/api/logout", { method: "POST" });
     router.push("/");
     router.refresh();

@@ -106,16 +106,6 @@ test("dry-spell scenario flags water risk for rainfed, not for irrigated", () =>
   assert.ok(irrigated.factors.find(f => f.key === "water")!.score! >= 85);
 });
 
-test("official warning caps the assessment and is attributed as official", () => {
-  const climate = summarizeMonthly(history(YEARS, () => 11, 28)).months;
-  const base = { crop: "rice" as const, irrigation: "irrigated" as const, plantingMonth: 6, coordinates: coords, mode: "historical" as const, climate };
-  const without = recommend(base);
-  const withWarn = recommend({ ...base, advisories: [{ title: "Tropical Cyclone Wind Signal", severity: "warning" }] });
-  assert.ok(withWarn.score! < without.score!);
-  assert.ok(["less_favorable", "high_risk"].includes(withWarn.assessment));
-  assert.ok(withWarn.risks.some(r => r.startsWith("Official advisory in effect")));
-});
-
 test("current mode needs a forecast and refuses far-away months", () => {
   const climate = summarizeMonthly(history(YEARS, () => 11, 28)).months;
   const now = new Date("2026-06-10T00:00:00Z");

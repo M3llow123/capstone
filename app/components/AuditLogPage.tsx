@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getAuditLog, onAuditChanged, logAudit, type AuditEntry } from "../lib/auditStore";
+import { getAuditLog, onAuditChanged, type AuditEntry } from "../lib/auditStore";
 import AuditLogNav from "./AuditLogNav";
 
 const impactChildren = [
@@ -58,7 +58,6 @@ export default function AuditLogPage({ username = "User" }: { username?: string 
   useEffect(() => { setAuditPage(1); }, [search, showEntries]);
 
   async function handleLogout() {
-    await logAudit("LOGOUT", undefined, username);
     await fetch("/api/logout", { method: "POST" });
     router.push("/");
     router.refresh();

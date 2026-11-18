@@ -1,11 +1,16 @@
 "use client";
 import type { ReactNode } from "react";
 
-export function Card({ title, children, right }: { title?: string; children: ReactNode; right?: ReactNode }) {
+type SurfaceVariant = "default" | "farm";
+
+export function Card({ title, children, right, variant = "default" }: { title?: string; children: ReactNode; right?: ReactNode; variant?: SurfaceVariant }) {
+  const frame = variant === "farm"
+    ? "rounded-md border border-[#d5dde5] bg-white p-4 sm:p-5"
+    : "rounded border border-[#dde3ea] bg-white p-3 shadow-sm";
   return (
-    <section className="rounded border border-[#dde3ea] bg-white p-3 shadow-sm">
+    <section className={frame}>
       {(title || right) && (
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className={`flex items-center justify-between gap-3 ${variant === "farm" ? "mb-4 flex-wrap" : "mb-2"}`}>
           {title && <h3 className="m-0 text-sm font-bold text-[#1c2b3a]">{title}</h3>}
           {right}
         </div>
@@ -24,14 +29,16 @@ export function Loading({ text = "Loading..." }: { text?: string }) {
   );
 }
 
-export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function ErrorBox({ message, onRetry, variant = "default" }: { message: string; onRetry?: () => void; variant?: SurfaceVariant }) {
   return (
-    <div role="alert" className="rounded border border-[#d32f2f] bg-[#fdecea] p-4 text-sm text-[#7a1c1c]">
+    <div role="alert" className={`border p-4 text-sm text-[#7a1c1c] ${variant === "farm" ? "rounded-md border-[#d7a09c] bg-[#fff7f6]" : "rounded border-[#d32f2f] bg-[#fdecea]"}`}>
       <p className="m-0 font-bold">We could not load this right now.</p>
       <p className="m-0 mt-1">{message}</p>
       <p className="m-0 mt-1">Your other pages still work. Please try again in a few minutes.</p>
       {onRetry && (
-        <button onClick={onRetry} className="mt-2 rounded border border-[#d32f2f] bg-white px-3 py-1 text-[#d32f2f]">
+        <button onClick={onRetry} className={variant === "farm"
+          ? "mt-3 min-h-9 border border-[#b74e45] bg-white px-3 py-1.5 font-semibold text-[#8c2f28] hover:bg-[#fff0ee] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8c2f28]"
+          : "mt-2 rounded border border-[#d32f2f] bg-white px-3 py-1 text-[#d32f2f]"}>
           Try again
         </button>
       )}
@@ -39,12 +46,16 @@ export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () =
   );
 }
 
-export function Empty({ children }: { children: ReactNode }) {
-  return <div className="rounded border border-dashed border-[#ccd4df] bg-white p-6 text-center text-sm text-[#5b6672]">{children}</div>;
+export function Empty({ children, variant = "default" }: { children: ReactNode; variant?: SurfaceVariant }) {
+  const surface = variant === "farm"
+    ? "rounded-md border border-dashed border-[#c6d1dc] bg-[#f8fafb] text-[#526477]"
+    : "rounded border border-dashed border-[#ccd4df] bg-white text-[#5b6672]";
+  return <div className={`p-6 text-center text-sm ${surface}`}>{children}</div>;
 }
 
-export function Badge({ bg, fg, children }: { bg: string; fg: string; children: ReactNode }) {
-  return <span className="inline-block rounded-full px-3 py-1 text-xs font-bold" style={{ background: bg, color: fg }}>{children}</span>;
+export function Badge({ bg, fg, children, variant = "default" }: { bg: string; fg: string; children: ReactNode; variant?: SurfaceVariant }) {
+  const shape = variant === "farm" ? "inline-block rounded-sm px-2 py-1 text-xs font-bold" : "inline-block rounded-full px-3 py-1 text-xs font-bold";
+  return <span className={shape} style={{ background: bg, color: fg }}>{children}</span>;
 }
 
 export function Notice({ tone = "info", children }: { tone?: "info" | "warn"; children: ReactNode }) {
@@ -57,9 +68,12 @@ export function Skeleton({ className = "" }: { className?: string }) {
 }
 
 /** A card-shaped skeleton: optional heading bar plus `lines` text lines. Announces loading once for screen readers. */
-export function CardSkeleton({ title = true, lines = 4, label = "Loading..." }: { title?: boolean; lines?: number; label?: string }) {
+export function CardSkeleton({ title = true, lines = 4, label = "Loading...", variant = "default" }: { title?: boolean; lines?: number; label?: string; variant?: SurfaceVariant }) {
+  const frame = variant === "farm"
+    ? "rounded-md border border-[#d5dde5] bg-white p-4 sm:p-5"
+    : "rounded border border-[#dde3ea] bg-white p-3 shadow-sm";
   return (
-    <section role="status" aria-busy="true" aria-label={label} className="rounded border border-[#dde3ea] bg-white p-3 shadow-sm">
+    <section role="status" aria-busy="true" aria-label={label} className={frame}>
       {title && <Skeleton className="mb-3 h-4 w-40" />}
       <div className="space-y-2">
         {Array.from({ length: lines }, (_, i) => <Skeleton key={i} className={`h-3 ${i === lines - 1 ? "w-2/3" : "w-full"}`} />)}
@@ -72,16 +86,16 @@ export function CardSkeleton({ title = true, lines = 4, label = "Loading..." }: 
 export function CalendarSkeleton() {
   return (
     <div role="status" aria-busy="true" aria-label="Loading planting calendar" className="space-y-3">
-      <section className="rounded border border-[#dde3ea] bg-white p-3 shadow-sm">
+      <section className="rounded-md border border-[#d5dde5] bg-white p-4 sm:p-5">
         <Skeleton className="mb-3 h-4 w-40" />
         <Skeleton className="mb-2 h-9 w-full" />
         <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-12">
           {Array.from({ length: 12 }, (_, i) => <Skeleton key={i} className="h-12" />)}
         </div>
       </section>
-      <div className="grid items-start gap-3 lg:grid-cols-2">
-        <CardSkeleton lines={7} />
-        <CardSkeleton lines={9} />
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <CardSkeleton lines={7} variant="farm" />
+        <CardSkeleton lines={9} variant="farm" />
       </div>
     </div>
   );

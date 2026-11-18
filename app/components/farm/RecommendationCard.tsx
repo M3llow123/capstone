@@ -67,7 +67,7 @@ export default function RecommendationCard({ rec, heading }: { rec: Recommendati
   const color = scoreColor(rec.score ?? 0);
 
   return (
-    <Card title={heading ?? `${cropName} - ${when}`} right={<Badge bg={meta.bg} fg={meta.fg}>{meta.label}</Badge>}>
+    <Card variant="farm" title={heading ?? `${cropName} · ${when}`} right={<Badge variant="farm" bg={meta.bg} fg={meta.fg}>{meta.label}</Badge>}>
       {rec.assessment === "insufficient_data" ? (
         <div className="space-y-2 text-sm text-[#1c2b3a]">
           <p className="m-0 font-bold">We do not have enough reliable data to give a recommendation for this choice.</p>
@@ -76,7 +76,7 @@ export default function RecommendationCard({ rec, heading }: { rec: Recommendati
       ) : (
         <div className="space-y-4 text-sm text-[#1c2b3a]">
           {/* 1. The answer */}
-          <section aria-label="Summary" className="rounded border-l-4 bg-[#f6f8fa] p-3" style={{ borderColor: color }}>
+          <section aria-label="Summary" className="border-l-2 bg-[#f5f8fa] p-3.5" style={{ borderColor: color }}>
             <div className="flex items-center gap-3">
               <div className="shrink-0 text-center leading-none">
                 <div className="text-3xl font-bold" style={{ color }}>{rec.score}</div>
@@ -98,12 +98,12 @@ export default function RecommendationCard({ rec, heading }: { rec: Recommendati
           {/* 2. Why: one row per thing we checked */}
           <section aria-label="What we checked">
             <h4 className="m-0 mb-2 text-xs font-bold uppercase tracking-wide text-[#5b6672]">What we checked</h4>
-            <ul className="m-0 list-none overflow-hidden rounded border border-[#dde3ea] p-0">
+            <ul className="m-0 list-none overflow-hidden border border-[#d5dde5] p-0">
               {scored.map((f, i) => {
                 const I = FACTOR_ICON[f.key];
                 const c = scoreColor(f.score);
                 return (
-                  <li key={f.key} className="border-t border-[#e3e8ee] px-3 py-2.5 first:border-t-0" style={{ background: i % 2 ? "#fafbfc" : "#fff" }}>
+                  <li key={f.key} className="border-t border-[#e3e8ee] px-3 py-3 first:border-t-0" style={{ background: i % 2 ? "#fafbfc" : "#fff" }}>
                     {/* Row 1: what was checked, and how it rated. Wraps on narrow cards instead of scrolling. */}
                     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
                       <span className="flex items-center gap-2 text-xs font-bold text-[#1c2b3a]"><I size={16} style={{ color: c }} aria-hidden />{FACTOR_NAME[f.key]}</span>
@@ -128,13 +128,13 @@ export default function RecommendationCard({ rec, heading }: { rec: Recommendati
           {(rec.risks.length > 0 || rec.actions.length > 0) && (
             <section aria-label="Advice" className="grid gap-3 sm:grid-cols-2">
               {rec.risks.length > 0 && (
-                <div className="rounded border border-[#f3c98b] bg-[#fff9ef] p-3">
+                <div className="border border-[#ecd7b3] bg-[#fffaf2] p-3">
                   <h4 className="m-0 mb-1.5 flex items-center gap-1.5 text-xs font-bold text-[#8a4b00]"><AlertTriangle size={14} aria-hidden /> Watch out for</h4>
                   <ul className="m-0 list-disc space-y-1 pl-4 text-xs">{rec.risks.map(r => <li key={r}>{sentence(r)}</li>)}</ul>
                 </div>
               )}
               {rec.actions.length > 0 && (
-                <div className="rounded border border-[#b9d9bb] bg-[#f3faf3] p-3">
+                <div className="border border-[#c7d9ca] bg-[#f5f9f5] p-3">
                   <h4 className="m-0 mb-1.5 flex items-center gap-1.5 text-xs font-bold text-[#1f5e23]"><ListChecks size={14} aria-hidden /> What you can do</h4>
                   <ul className="m-0 list-none space-y-1 p-0 text-xs">
                     {rec.actions.map(a => <li key={a} className="flex gap-1.5"><CheckCircle2 size={13} className="mt-0.5 shrink-0 text-[#2e7d32]" aria-hidden />{sentence(a)}</li>)}
@@ -151,8 +151,8 @@ export default function RecommendationCard({ rec, heading }: { rec: Recommendati
         {!rec.thresholdsValidated && (
           <Notice tone="warn">Still being reviewed by agriculture experts. Treat this as a guide, not as advice.</Notice>
         )}
-        <details className="text-xs text-[#5b6672]">
-          <summary className="flex cursor-pointer items-center gap-1 font-bold text-[#003087]"><Info size={13} aria-hidden /> About this assessment</summary>
+        <details className="text-xs text-[#607487]">
+          <summary className="flex cursor-pointer items-center gap-1 font-bold text-[#17476b]"><Info size={13} aria-hidden /> About this assessment</summary>
           <p className="m-0 mt-1.5 leading-snug">{rec.disclaimer}</p>
         </details>
       </div>

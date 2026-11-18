@@ -18,11 +18,6 @@ import type {
 export const DISCLAIMER =
   "This is an application-generated assessment, not an official government classification. Historical suitability does not guarantee future weather or crop success. Forecast confidence drops as the forecast period gets longer. Confirm with your local agricultural office.";
 
-export interface OfficialAdvisoryInput {
-  title: string;
-  severity: "advisory" | "watch" | "warning";
-}
-
 export interface RecommendInput {
   crop: Crop;
   irrigation: Irrigation;
@@ -32,7 +27,6 @@ export interface RecommendInput {
   climate: MonthlyClimate[] | null;
   climateMinYears?: number;
   forecast?: Forecast | null;
-  advisories?: OfficialAdvisoryInput[];
   now?: Date;
   profile?: CropProfile;
   config?: ScoringConfig;
@@ -172,9 +166,8 @@ export function recommend(input: RecommendInput): Recommendation {
   // ---- Weather risk ----
   let risk: FactorResult = {
     key: "risk", label: "Weather risks", score: null, weight: cfg.weights.risk,
-    detail: "Not enough history to estimate weather risk.", basis: "Historical extremes + official advisories (if any)",
+    detail: "Not enough history to estimate weather risk.", basis: "Historical extremes (Open-Meteo reanalysis)",
   };
-  let capByAdvisory: Assessment | null = null;
   if (climate) {
     const c0 = climate[m - 1];
     if (c0 && c0.yearsWithData >= minYears) {
@@ -185,12 +178,6 @@ export function recommend(input: RecommendInput): Recommendation {
       if (c0.heavyMonthShare > 0.2) notes.push(`${r0(c0.heavyMonthShare * 100)}% of past years had an excessively wet ${monthName(m)}`);
       if (c0.meanHeavyRainDays >= 0.5) notes.push("heavy-rain days occur in many years");
       if (c0.meanWindMaxKmh != null && c0.meanWindMaxKmh >= profile.gustWarnKmh) { s -= 10; notes.push("strong winds are common"); }
-      for (const a of input.advisories ?? []) {
-        const pen = a.severity === "warning" ? 40 : a.severity === "watch" ? 25 : 10;
-        s -= pen;
-        risks.push(`Official advisory in effect: ${a.title}`);
-        if (a.severity === "warning") capByAdvisory = "less_favorable";
-      }
       if (c0.heavyMonthShare > 0.2) risks.push("This period has a history of excessive rainfall (typhoon season risk).");
       risk = { ...risk, score: r0(clamp(s)), detail: notes.length ? `${notes.join("; ")}.` : "No notable historical extremes for this month." };
     }
@@ -207,7 +194,6 @@ export function recommend(input: RecommendInput): Recommendation {
 
   sources.push("Open-Meteo (historical reanalysis)");
   if (mode === "current") sources.push("Open-Meteo (forecast)");
-  if (input.advisories?.length) sources.push("Official advisories entered by PAGASA personnel");
 
   const base = {
     mode, crop, irrigation, plantingMonth: m, coordinates: input.coordinates,
@@ -223,10 +209,8 @@ export function recommend(input: RecommendInput): Recommendation {
   }
 
   const score = r0(available.reduce((a, f) => a + (f.score as number) * f.weight, 0) / wsum);
-  let assessment: Assessment =
+  const assessment: Assessment =
     score >= cfg.bands.favorable ? "favorable" : score >= cfg.bands.moderate ? "moderately_favorable" : score >= cfg.bands.less ? "less_favorable" : "high_risk";
-  const order: Assessment[] = ["favorable", "moderately_favorable", "less_favorable", "high_risk"];
-  if (capByAdvisory && order.indexOf(assessment) < order.indexOf(capByAdvisory)) assessment = capByAdvisory;
 
   // Actions
   if (risks.some(r => /excessive|waterlogging|wet day|flood/i.test(r))) actions.push("Prepare drainage and avoid planting in low spots that hold water.");
@@ -238,8 +222,7 @@ export function recommend(input: RecommendInput): Recommendation {
   const explanation =
     `${label[0].toUpperCase() + label.slice(1)}, ${mode === "current" ? "planting in the next few days" : `${monthName(m)} planting`}: score ${score}/100. ` +
     `Strongest factor: ${top[0].label} (${top[0].score}). Weakest: ${top[top.length - 1].label} (${top[top.length - 1].score}). ` +
-    `The score combines ${available.length} factor${available.length > 1 ? "s" : ""} that had data. ` +
-    (capByAdvisory ? "An official warning caps the assessment. " : "");
+    `The score combines ${available.length} factor${available.length > 1 ? "s" : ""} that had data.`;
 
   return { ...base, assessment, score, risks, actions, insufficientReasons: [], explanation };
 }

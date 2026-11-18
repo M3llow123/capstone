@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { logAudit } from "./lib/auditStore";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +26,6 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      await logAudit("LOGIN", undefined, username);
       router.push("/uploader");
       router.refresh();
     } catch {
